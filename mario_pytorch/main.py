@@ -12,17 +12,22 @@ import gym_super_mario_bros
 
 from gym.wrappers import FrameStack
 from nes_py.wrappers import JoypadSpace
+from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
 from mario_pytorch.wrappers import SkipFrame, GrayScaleObservation, ResizeObservation
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
+from mario_pytorch.util.get_env_name import get_env_name
 
 # ----------------------------------------------------------------------
 
-# 4 Consecutive GrayScale Frames Set
-# [4, 84, 84]
-env = gym_super_mario_bros.make("SuperMarioBros-1-1-v0")
-env = JoypadSpace(env, [["right"], ["right", "A"]])
+WORLD: int = 1
+STAGE: int = 1
+VERSION: int = 3
+
+# 4 Consecutive GrayScale Frames Set [4, 84, 84]
+env = gym_super_mario_bros.make(get_env_name(WORLD, STAGE, VERSION))
+env = JoypadSpace(env, SIMPLE_MOVEMENT)
 env = SkipFrame(env, skip=4)
 env = GrayScaleObservation(env)
 env = ResizeObservation(env, shape=84)

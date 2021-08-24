@@ -5,6 +5,13 @@ StepRet = Tuple[Any, float, bool, dict]
 
 
 class SkipFrame(gym.Wrapper):
+    """skipフレーム分報酬を貯める
+
+    Notes
+    -----
+    skipFrame 分同じ action を実行する
+    """
+
     def __init__(self, env: gym.Env, skip: int) -> None:
         super().__init__(env)
         self._skip = skip
@@ -12,7 +19,7 @@ class SkipFrame(gym.Wrapper):
     def step(self, action: int) -> StepRet:
         total_reward = 0
         done = False
-        for i in range(self._skip):
+        for _ in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             total_reward += reward
             if done:
