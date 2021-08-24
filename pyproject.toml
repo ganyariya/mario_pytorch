@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "mario_pytorch"
+version = "0.1.0"
+description = ""
+authors = ["ganariya <ganariya2525@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+gym-super-mario-bros = "^7.3.2"
+torch = "^1.9.0"
+torchvision = "^0.10.0"
+flake8 = "^3.9.2"
+black = "^21.7b0"
+matplotlib = "^3.4.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
