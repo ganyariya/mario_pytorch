@@ -1,3 +1,7 @@
 {
     "python.formatting.provider": "black",
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/__init__.pyc": true
+    }
 }
