@@ -152,6 +152,7 @@ class Mario:
         # TD Target -- Target (固定)
         td_tgt = self.td_target(reward, next_state, done)
 
+        # https://colab.research.google.com/github/YutaroOgawa/pytorch_tutorials_jp/blob/main/notebook/4_RL/4_2_mario_rl_tutorial_jp.ipynb#scrollTo=hjDCD1o3PKHX
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
 
@@ -163,21 +164,42 @@ class Mario:
         ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
         return current_Q
 
-    # target については backpropagete しない
-    # 学習させるのは online
     @torch.no_grad()
     def td_target(
         self, reward: torch.Tensor, next_state: torch.Tensor, done: torch.Tensor
     ) -> torch.Tensor:
-        # 32 is batch size
-        # 7 is action size
-        # Tensor (32, 7)
+        """
+        DQN
+        https://qiita.com/ishizakiiii/items/5eff79b59bce74fdca0d#q-learning
+
+        Q(s, a) <- Q(s, a) + \alpha ( R(s, a) + \gamma * (argmax_{a'}Qt(s', a')) - Qo(s, a))
+        Qt=target（固定）  Qo=online (学習ネットワーク)
+
+        R(s, a) + rQt(s', a') = 実際に行動して得られた値 C
+        Qo(s, a) = エージェントの現在の予測値であり，これがCに近づくように修正する
+
+        ----------
+        DDQN
+        https://www.renom.jp/ja/notebooks/product/renom_rl/ddqn/notebook.html
+        https://blog.syundo.org/post/20171208-reinforcement-learning-dqn-and-impl/
+        https://gyazo.com/365ac89c3f956f4a7bbb35359e9e18a3
+
+        Notes
+        -----
+        torch.no_grad で勾配計算を無効にしている
+        """
+        # 32 is batch size # 7 is action size # Tensor (32, 7)
+        # next_state_Q は online で決定する
         next_state_Q = self.net(next_state, model="online")
         # 行方向に演算する (32, )
         best_action: int = torch.argmax(next_state_Q, axis=1)
         next_Q = self.net(next_state, model="target")[
             np.arange(0, self.batch_size), best_action
         ]  # Q_target(s', a') # shape torch.Size([32])
+
+        # !done ならまだゲーム終了してないので，1で考慮する
+        # done だと終わっているので 0で考慮しない
+        # r + \gamma * next_Q * is_done
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
     def update_Q_online(
