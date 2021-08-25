@@ -28,7 +28,7 @@ VERSION: int = 3
 
 USE_CUDA = torch.cuda.is_available()
 IS_RENDER = True
-EPISODES = 10
+EPISODES = 100
 EVERY_RECORD = 20
 EVERY_RENDER = 20
 
