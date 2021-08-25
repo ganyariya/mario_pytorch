@@ -27,8 +27,8 @@ class Mario:
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
-        self.curr_step = 0  # episode 回数記憶
-        self.save_every = 5e5
+        self.curr_step = 0  # Frame 回数記憶 (エピソードではない　フレーム)
+        self.save_every = 5e5  # 5e5 Frame ごとにモデル保存
 
         self.memory = deque(maxlen=100000)
         self.batch_size = 32
