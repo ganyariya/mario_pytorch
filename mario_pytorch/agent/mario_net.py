@@ -1,6 +1,8 @@
 import copy
 from torch import nn
 
+HW_SIZE = 84
+
 
 class MarioNet(nn.Module):
     """mini cnn structure
@@ -11,11 +13,13 @@ class MarioNet(nn.Module):
         super().__init__()
         c, h, w = input_dim
 
-        if h != 84:
-            raise ValueError(f"Expecting input height: 84, got: {h}")
-        if w != 84:
-            raise ValueError(f"Expecting input width: 84, got: {w}")
+        if h != HW_SIZE:
+            raise ValueError(f"Expecting input height: {HW_SIZE}, got: {h}")
+        if w != HW_SIZE:
+            raise ValueError(f"Expecting input width: {HW_SIZE}, got: {w}")
 
+        # https://www.koi.mashykom.com/deep_learning.html
+        # チャンネル数を増やして 画像サイズを小さくする
         self.online = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
             nn.ReLU(),

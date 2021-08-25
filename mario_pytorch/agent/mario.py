@@ -157,7 +157,7 @@ class Mario:
 
         return (td_est.mean().item(), loss)
 
-    def td_estimate(self, state: torch.Tensor, action: int) -> torch.Tensor:
+    def td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
         current_Q = self.net(state, model="online")[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
@@ -167,9 +167,10 @@ class Mario:
     # 学習させるのは online
     @torch.no_grad()
     def td_target(
-        self, reward: float, next_state: torch.Tensor, done: bool
+        self, reward: torch.Tensor, next_state: torch.Tensor, done: torch.Tensor
     ) -> torch.Tensor:
         # 32 is batch size
+        # 7 is action size
         # Tensor (32, 7)
         next_state_Q = self.net(next_state, model="online")
         # 行方向に演算する (32, )
