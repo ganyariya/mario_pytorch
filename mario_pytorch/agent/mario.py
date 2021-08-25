@@ -37,8 +37,8 @@ class Mario:
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
-        self.burnin = 1e4  # 訓練前に経験させる回数
-        self.learn_every = 3  # learn_every ごとに Q_online を学習させる
+        self.burnin = 1e4  # 訓練前に経験させるFrame回数
+        self.learn_every = 3  # learn_every Frame ごとに Q_online を学習させる
         self.sync_every = 1e4  #  Q_target & Q_online の同期タイミング
 
     def act(self, state: LazyFrames) -> int:
