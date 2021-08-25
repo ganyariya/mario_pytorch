@@ -24,11 +24,11 @@ from mario_pytorch.util.get_env_name import get_env_name
 
 WORLD: int = 1
 STAGE: int = 1
-VERSION: int = 3
+VERSION: int = 0
 
 USE_CUDA = torch.cuda.is_available()
 IS_RENDER = True
-EPISODES = 100
+EPISODES = 10000
 EVERY_RECORD = 20
 EVERY_RENDER = 20
 
