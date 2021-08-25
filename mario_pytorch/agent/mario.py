@@ -160,7 +160,7 @@ class Mario:
     def td_estimate(self, state: torch.Tensor, action: int) -> torch.Tensor:
         current_Q = self.net(state, model="online")[
             np.arange(0, self.batch_size), action
-        ]  # Q_online(s,a) # shape torch.Size([32])
+        ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
         return current_Q
 
     # target については backpropagete しない
@@ -169,14 +169,19 @@ class Mario:
     def td_target(
         self, reward: float, next_state: torch.Tensor, done: bool
     ) -> torch.Tensor:
+        # 32 is batch size
+        # Tensor (32, 7)
         next_state_Q = self.net(next_state, model="online")
-        best_action = torch.argmax(next_state_Q, axis=1)
+        # 行方向に演算する (32, )
+        best_action: int = torch.argmax(next_state_Q, axis=1)
         next_Q = self.net(next_state, model="target")[
             np.arange(0, self.batch_size), best_action
         ]  # Q_target(s', a') # shape torch.Size([32])
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
-    def update_Q_online(self, td_estimate, td_target) -> float:
+    def update_Q_online(
+        self, td_estimate: torch.Tensor, td_target: torch.Tensor
+    ) -> float:
         loss = self.loss_fn(td_estimate, td_target)
         self.optimizer.zero_grad()  # 勾配をリセット
         loss.backward()
