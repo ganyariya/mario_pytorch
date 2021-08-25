@@ -1,12 +1,14 @@
 import time
 import datetime
 
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class MetricLogger:
-    def __init__(self, save_dir):
+    def __init__(self, save_dir: Path):
         self.save_log = save_dir / "log"
         with open(self.save_log, "w") as f:
             f.write(
@@ -37,7 +39,7 @@ class MetricLogger:
         # Timing
         self.record_time = time.time()
 
-    def log_step(self, reward, loss, q):
+    def log_step(self, reward: float, loss: float, q: float):
         self.curr_ep_reward += reward
         self.curr_ep_length += 1
         if loss:
@@ -67,7 +69,7 @@ class MetricLogger:
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
 
-    def record(self, episode, epsilon, step):
+    def record(self, episode: float, epsilon: float, step: int):
         mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
         mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)

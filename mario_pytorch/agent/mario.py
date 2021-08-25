@@ -6,6 +6,7 @@ from collections import deque
 import torch
 import numpy as np
 
+from gym.wrappers.frame_stack import LazyFrames
 from mario_pytorch.agent.mario_net import MarioNet
 
 
@@ -26,21 +27,21 @@ class Mario:
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
-        self.curr_step = 0
-        self.save_every = 5e5
+        self.curr_step = 0  # Frame 回数記憶 (エピソードではない　フレーム)
+        self.save_every = 5e5  # 5e5 Frame ごとにモデル保存
 
         self.memory = deque(maxlen=100000)
         self.batch_size = 32
 
         self.gamma = 0.9
-        self.optimzer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
-        self.burnin = 1e4  # min. experiences before training
-        self.learn_every = 3  # no. of experiences between updates to Q_online
-        self.sync_every = 1e4  # no. of experiences between Q_target & Q_online
+        self.burnin = 1e4  # 訓練前に経験させるFrame回数
+        self.learn_every = 3  # learn_every Frame ごとに Q_online を学習させる
+        self.sync_every = 1e4  #  Q_target & Q_online の同期タイミング
 
-    def act(self, state: np.ndarray) -> int:
+    def act(self, state: LazyFrames) -> int:
         """
         Given a state, choose an epsilon-greedy action and update value of step.
 
@@ -60,6 +61,8 @@ class Mario:
                 state = torch.tensor(state).cuda()
             else:
                 state = torch.tensor(state)
+
+            # (4, 84, 84) -> (1, 4, 84, 84)
             state = state.unsqueeze(0)
             action_values = self.net(state, model="online")
             action_idx = torch.argmax(action_values, axis=1).item()
@@ -72,7 +75,14 @@ class Mario:
         self.curr_step += 1
         return action_idx
 
-    def cache(self, state, next_state, action, reward, done):
+    def cache(
+        self,
+        state: LazyFrames,
+        next_state: LazyFrames,
+        action: int,
+        reward: float,
+        done: bool,
+    ) -> None:
         """
         Store the experience to self.memory (replay buffer)
 
@@ -117,7 +127,7 @@ class Mario:
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
 
-    def learn(self):
+    def learn(self) -> Tuple[Optional[float], Optional[float]]:
         """Update online action value (Q) function with a batch of experiences.
 
         Target は固定する
@@ -132,37 +142,69 @@ class Mario:
         if self.curr_step % self.learn_every != 0:
             return None, None
 
+        # 過去のスタックから self.batch_size (32) だけ持ってくる
+        # 1 つに 4 frame 入っているはず
         state, next_state, action, reward, done = self.recall()
 
-        # TD Estimate
+        # TD Estimate -- Online (学習)
         td_est = self.td_estimate(state, action)
 
-        # TD Target
+        # TD Target -- Target (固定)
         td_tgt = self.td_target(reward, next_state, done)
 
+        # https://colab.research.google.com/github/YutaroOgawa/pytorch_tutorials_jp/blob/main/notebook/4_RL/4_2_mario_rl_tutorial_jp.ipynb#scrollTo=hjDCD1o3PKHX
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
 
         return (td_est.mean().item(), loss)
 
-    def td_estimate(self, state, action: int):
+    def td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
         current_Q = self.net(state, model="online")[
-            np.arrange(0, self.batch_size), action
-        ]  # Q_online(s,a)
+            np.arange(0, self.batch_size), action
+        ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
         return current_Q
 
-    # target については backpropagete しない
-    # 学習させるのは online
     @torch.no_grad()
-    def td_target(self, reward, next_state, done):
+    def td_target(
+        self, reward: torch.Tensor, next_state: torch.Tensor, done: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        DQN
+        https://qiita.com/ishizakiiii/items/5eff79b59bce74fdca0d#q-learning
+
+        Q(s, a) <- Q(s, a) + \alpha ( R(s, a) + \gamma * (argmax_{a'}Qt(s', a')) - Qo(s, a))
+        Qt=target（固定）  Qo=online (学習ネットワーク)
+
+        R(s, a) + rQt(s', a') = 実際に行動して得られた値 C
+        Qo(s, a) = エージェントの現在の予測値であり，これがCに近づくように修正する
+
+        ----------
+        DDQN
+        https://www.renom.jp/ja/notebooks/product/renom_rl/ddqn/notebook.html
+        https://blog.syundo.org/post/20171208-reinforcement-learning-dqn-and-impl/
+        https://gyazo.com/365ac89c3f956f4a7bbb35359e9e18a3
+
+        Notes
+        -----
+        torch.no_grad で勾配計算を無効にしている
+        """
+        # 32 is batch size # 7 is action size # Tensor (32, 7)
+        # next_state_Q は online で決定する
         next_state_Q = self.net(next_state, model="online")
-        best_action = torch.argmax(next_state_Q, axis=1)
+        # 行方向に演算する (32, )
+        best_action: int = torch.argmax(next_state_Q, axis=1)
         next_Q = self.net(next_state, model="target")[
             np.arange(0, self.batch_size), best_action
-        ]  # Q_target(s', a')
+        ]  # Q_target(s', a') # shape torch.Size([32])
+
+        # !done ならまだゲーム終了してないので，1で考慮する
+        # done だと終わっているので 0で考慮しない
+        # r + \gamma * next_Q * is_done
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
-    def update_Q_online(self, td_estimate, td_target):
+    def update_Q_online(
+        self, td_estimate: torch.Tensor, td_target: torch.Tensor
+    ) -> float:
         loss = self.loss_fn(td_estimate, td_target)
         self.optimizer.zero_grad()  # 勾配をリセット
         loss.backward()
