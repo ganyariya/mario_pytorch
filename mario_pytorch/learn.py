@@ -25,6 +25,7 @@ from mario_pytorch.util.config import Config
 
 config_path = Path(__file__).parents[1] / "config" / "base.yaml"
 config = Config.create(str(config_path))
+print(f"INTENTION: {config.INTENTION}")
 
 save_dir = (
     Path(path.dirname(__file__)).parent
