@@ -27,7 +27,7 @@ STAGE: int = 1
 VERSION: int = 0
 
 USE_CUDA = torch.cuda.is_available()
-IS_RENDER = True
+IS_RENDER = False
 EPISODES = 10000
 EVERY_RECORD = 20
 EVERY_RENDER = 20
