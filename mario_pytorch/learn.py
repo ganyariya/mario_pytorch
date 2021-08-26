@@ -8,6 +8,7 @@ import datetime
 from pathlib import Path
 from os import path
 
+import yaml
 import torch
 import gym_super_mario_bros
 
@@ -25,7 +26,6 @@ from mario_pytorch.util.config import Config
 
 config_path = Path(__file__).parents[1] / "config" / "base.yaml"
 config = Config.create(str(config_path))
-print(f"INTENTION: {config.INTENTION}")
 
 save_dir = (
     Path(path.dirname(__file__)).parent
@@ -33,6 +33,8 @@ save_dir = (
     / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 )
 save_dir.mkdir(parents=True)
+with open(save_dir / "used_config.yaml", "w") as f:
+    yaml.safe_dump(config.dict(), f, encoding="utf-8", allow_unicode=True)
 
 # 4 Consecutive GrayScale Frames Set [4, 84, 84]
 env = gym_super_mario_bros.make(
