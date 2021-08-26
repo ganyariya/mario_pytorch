@@ -31,6 +31,7 @@ IS_RENDER = False
 EPISODES = 10000
 EVERY_RECORD = 20
 EVERY_RENDER = 20
+SHAPE = 84
 
 save_dir = (
     Path(path.dirname(__file__)).parent
@@ -44,10 +45,12 @@ env = gym_super_mario_bros.make(get_env_name(WORLD, STAGE, VERSION))
 env = JoypadSpace(env, SIMPLE_MOVEMENT)
 env = SkipFrame(env, skip=4)
 env = GrayScaleObservation(env)
-env = ResizeObservation(env, shape=84)
+env = ResizeObservation(env, shape=SHAPE)
 env = FrameStack(env, num_stack=4)  # 4Frame まとめて取り出す
 
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir)
+mario = Mario(
+    state_dim=(4, SHAPE, SHAPE), action_dim=env.action_space.n, save_dir=save_dir
+)
 logger = MetricLogger(save_dir)
 
 for e in range(EPISODES):
