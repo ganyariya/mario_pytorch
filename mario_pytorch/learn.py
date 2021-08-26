@@ -19,19 +19,12 @@ from mario_pytorch.wrappers import SkipFrame, GrayScaleObservation, ResizeObserv
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
 from mario_pytorch.util.get_env_name import get_env_name
+from mario_pytorch.util.config import Config
 
 # ----------------------------------------------------------------------
 
-WORLD: int = 1
-STAGE: int = 1
-VERSION: int = 0
-
-USE_CUDA = torch.cuda.is_available()
-IS_RENDER = False
-EPISODES = 10000
-EVERY_RECORD = 20
-EVERY_RENDER = 20
-SHAPE = 84
+config_path = Path(__file__).parents[1] / "config" / "base.yaml"
+config = Config.create(str(config_path))
 
 save_dir = (
     Path(path.dirname(__file__)).parent
@@ -41,19 +34,23 @@ save_dir = (
 save_dir.mkdir(parents=True)
 
 # 4 Consecutive GrayScale Frames Set [4, 84, 84]
-env = gym_super_mario_bros.make(get_env_name(WORLD, STAGE, VERSION))
+env = gym_super_mario_bros.make(
+    get_env_name(config.WORLD, config.STAGE, config.VERSION)
+)
 env = JoypadSpace(env, SIMPLE_MOVEMENT)
-env = SkipFrame(env, skip=4)
+env = SkipFrame(env, skip=config.SKIP_FRAME)
 env = GrayScaleObservation(env)
-env = ResizeObservation(env, shape=SHAPE)
-env = FrameStack(env, num_stack=4)  # 4Frame まとめて取り出す
+env = ResizeObservation(env, shape=config.SHAPE)
+env = FrameStack(env, num_stack=config.NUM_STACK)  # 4Frame まとめて取り出す
 
 mario = Mario(
-    state_dim=(4, SHAPE, SHAPE), action_dim=env.action_space.n, save_dir=save_dir
+    state_dim=(config.NUM_STACK, config.SHAPE, config.SHAPE),
+    action_dim=env.action_space.n,
+    save_dir=save_dir,
 )
 logger = MetricLogger(save_dir)
 
-for e in range(EPISODES):
+for e in range(config.EPISODES):
 
     # state.shape (4, 84, 84)
     # state.frame_shape (84, 84)
@@ -61,7 +58,7 @@ for e in range(EPISODES):
 
     while True:
         action = mario.act(state)
-        if IS_RENDER and e % EVERY_RENDER == 0:
+        if config.IS_RENDER and e % config.EVERY_RENDER == 0:
             env.render()
 
         next_state, reward, done, info = env.step(action)
@@ -77,5 +74,5 @@ for e in range(EPISODES):
             break
 
     logger.log_episode()
-    if e % EVERY_RECORD == 0:
+    if e % config.EVERY_RECORD == 0:
         logger.record(episode=e, epsilon=mario.exploration_rate, step=mario.curr_step)
