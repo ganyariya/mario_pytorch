@@ -27,14 +27,11 @@ from mario_pytorch.util.config import Config
 config_path = Path(__file__).parents[1] / "config" / "base.yaml"
 config = Config.create(str(config_path))
 
-save_dir = (
-    Path(path.dirname(__file__)).parent
-    / "checkpoints"
-    / datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-)
-save_dir.mkdir(parents=True)
-with open(save_dir / "used_config.yaml", "w") as f:
-    yaml.safe_dump(config.dict(), f, encoding="utf-8", allow_unicode=True)
+checkpoint_name = "2021-08-25T15-32-41"
+checkpoint = Path(__file__).parents[1] / "checkpoints" / checkpoint_name
+model_name = "mario_net_5.chkpt"
+model_path = checkpoint / model_name
+model = torch.load(model_path)["model"]
 
 # 4 Consecutive GrayScale Frames Set [4, 84, 84]
 env = gym_super_mario_bros.make(
@@ -49,9 +46,10 @@ env = FrameStack(env, num_stack=config.NUM_STACK)  # 4Frame まとめて取り�
 mario = Mario(
     state_dim=(config.NUM_STACK, config.SHAPE, config.SHAPE),
     action_dim=env.action_space.n,
-    save_dir=save_dir,
+    save_dir=Path(__file__),
+    is_learn=False,
+    model=model,
 )
-logger = MetricLogger(save_dir)
 
 for e in range(config.EPISODES):
 
@@ -61,21 +59,11 @@ for e in range(config.EPISODES):
 
     while True:
         action = mario.act(state)
-        if config.IS_RENDER and e % config.EVERY_RENDER == 0:
-            env.render()
+        env.render()
 
         next_state, reward, done, info = env.step(action)
-
-        mario.cache(state, next_state, action, reward, done)
-        q, loss = mario.learn()
-
-        logger.log_step(reward, loss, q)
 
         state = next_state
 
         if done or info["flag_get"]:
             break
-
-    logger.log_episode()
-    if e % config.EVERY_RECORD == 0:
-        logger.record(episode=e, epsilon=mario.exploration_rate, step=mario.curr_step)
