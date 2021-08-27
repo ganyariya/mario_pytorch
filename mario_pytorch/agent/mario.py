@@ -2,6 +2,7 @@ import random
 from typing import *
 from pathlib import Path
 from collections import deque
+from collections import OrderedDict
 
 import torch
 import numpy as np
@@ -12,17 +13,25 @@ from mario_pytorch.agent.mario_net import MarioNet
 
 class Mario:
     def __init__(
-        self, state_dim: Tuple[int, int, int], action_dim: int, save_dir: Path
+        self,
+        state_dim: Tuple[int, int, int],
+        action_dim: int,
+        save_dir: Path,
+        is_learn=True,
+        model=OrderedDict(),
     ):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.save_dir = save_dir
         self.use_cuda = torch.cuda.is_available()
+        self.is_learn = is_learn
 
         # Mario's DNN to predict the most optimal action - we implement this in the Learn section
         self.net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.net = self.net.to(device="cuda")
+        if not is_learn:
+            self.net.load_state_dict(model)
 
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
@@ -123,6 +132,7 @@ class Mario:
         """
         Retrieve a batch of experiences from memory
         """
+        # batch_size 個取り出して 各要素ごとのList(Torch)にする
         batch = random.sample(self.memory, self.batch_size)
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
@@ -133,6 +143,9 @@ class Mario:
         Target は固定する
         Online を学習する
         """
+
+        if not self.is_learn:
+            return None, None
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step % self.save_every == 0:
