@@ -14,6 +14,7 @@ black = "^21.7b0"
 matplotlib = "^3.4.3"
 pydantic = "^1.8.2"
 PyYAML = "^5.4.1"
+stable-baselines3 = {extras = ["extra"], version = "^1.1.0"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
