@@ -11,27 +11,20 @@ from gym.wrappers.frame_stack import LazyFrames
 from mario_pytorch.agent.mario_net import MarioNet
 
 
-class Mario:
+class BaseMario:
     def __init__(
         self,
         state_dim: Tuple[int, int, int],
         action_dim: int,
-        save_dir: Path,
-        is_learn=True,
-        model=OrderedDict(),
     ):
         self.state_dim = state_dim
         self.action_dim = action_dim
-        self.save_dir = save_dir
         self.use_cuda = torch.cuda.is_available()
-        self.is_learn = is_learn
 
         # Mario's DNN to predict the most optimal action - we implement this in the Learn section
         self.net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.net = self.net.to(device="cuda")
-        if not is_learn:
-            self.net.load_state_dict(model)
 
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
@@ -48,7 +41,7 @@ class Mario:
 
         self.burnin = 1e4  # 訓練前に経験させるFrame回数
         self.learn_every = 3  # learn_every Frame ごとに Q_online を学習させる
-        self.sync_every = 1e4  #  Q_target & Q_online の同期タイミング
+        self.sync_every = 1e4  # Q_target & Q_online の同期タイミング
 
     def act(self, state: LazyFrames) -> int:
         """
@@ -83,6 +76,17 @@ class Mario:
         # increment step
         self.curr_step += 1
         return action_idx
+
+
+class Mario(BaseMario):
+    def __init__(
+        self,
+        state_dim: Tuple[int, int, int],
+        action_dim: int,
+        save_dir: Path,
+    ):
+        super().__init__(state_dim, action_dim)
+        self.save_dir = save_dir
 
     def cache(
         self,
@@ -144,8 +148,6 @@ class Mario:
         Online を学習する
         """
 
-        if not self.is_learn:
-            return None, None
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step % self.save_every == 0:
@@ -236,3 +238,11 @@ class Mario:
             save_path,
         )
         print(f"MarioNet saved to {save_path} at step {self.curr_step}")
+
+
+class LearnedMario(BaseMario):
+    def __init__(
+        self, state_dim: Tuple[int, int, int], action_dim: int, model: OrderedDict
+    ):
+        super().__init__(state_dim, action_dim)
+        self.net.load_state_dict(model)
