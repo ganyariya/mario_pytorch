@@ -3,12 +3,8 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 https://github.com/YuansongFeng/MadMario/blob/master/agent.py
 """
 
-import datetime
-
 from pathlib import Path
-from os import path
 
-import yaml
 import torch
 import gym_super_mario_bros
 
@@ -17,8 +13,7 @@ from nes_py.wrappers import JoypadSpace
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
 from mario_pytorch.wrappers import SkipFrame, GrayScaleObservation, ResizeObservation
-from mario_pytorch.agent.mario import Mario
-from mario_pytorch.metric_logger.metric_logger import MetricLogger
+from mario_pytorch.agent.mario import LearnedMario
 from mario_pytorch.util.get_env_name import get_env_name
 from mario_pytorch.util.config import Config
 
@@ -43,11 +38,9 @@ env = GrayScaleObservation(env)
 env = ResizeObservation(env, shape=config.SHAPE)
 env = FrameStack(env, num_stack=config.NUM_STACK)  # 4Frame まとめて取り出す
 
-mario = Mario(
+mario = LearnedMario(
     state_dim=(config.NUM_STACK, config.SHAPE, config.SHAPE),
     action_dim=env.action_space.n,
-    save_dir=Path(__file__),
-    is_learn=False,
     model=model,
 )
 
