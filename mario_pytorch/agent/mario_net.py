@@ -46,10 +46,9 @@ class MarioNet(nn.Module):
         self.merge_relu = nn.ReLU()
         self.merge_fc2 = nn.Linear(512, output_dim)
 
-    def forward(self, input) -> nn.Module:
+    def forward(self, x, y) -> nn.Module:
         # x image (32, 4, 84, 84) (32 batch_size, 4つの白黒Frameをまとめている, 縦, 横)
         # y reward
-        x, y = input
         x = self.image_conv1(x)
         x = self.image_relu1(x)
         x = self.image_conv2(x)

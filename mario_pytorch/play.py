@@ -46,8 +46,7 @@ mario = LearnedMario(
 
 for e in range(config.EPISODES):
 
-    # state.shape (4, 84, 84)
-    # state.frame_shape (84, 84)
+    # state.shape (4, 84, 84)  state.frame_shape (84, 84)
     state = env.reset()
 
     while True:

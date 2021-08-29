@@ -14,6 +14,11 @@ from mario_pytorch.agent.mario_net import MarioNet
 REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
 
 
+def input_format(state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    r = REWARD.repeat((state.shape[0], 1))
+    return state, r
+
+
 class BaseMario:
     def __init__(
         self,
@@ -69,8 +74,7 @@ class BaseMario:
 
             # (4, 84, 84) -> (1, 4, 84, 84)
             state = state.unsqueeze(0)
-            r = REWARD.repeat((state.shape[0], 1))
-            action_values = self.online_net((state, r))
+            action_values = self.online_net(*input_format(state))
             action_idx = torch.argmax(action_values, axis=1).item()
 
         # decrease exploration_rate
@@ -181,9 +185,7 @@ class Mario(BaseMario):
 
     def td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
         # r: (num_of_state, len(報酬関数の要素の数)) の 2次元Tensor
-        num_of_states = state.shape[0]
-        r = REWARD.repeat((num_of_states, 1))
-        current_Q = self.online_net((state, r))[
+        current_Q = self.online_net(*input_format(state))[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
         return current_Q
@@ -212,14 +214,11 @@ class Mario(BaseMario):
         -----
         torch.no_grad で勾配計算を無効にしている
         """
-        num_of_states = next_state.shape[0]
-        r = REWARD.repeat((num_of_states, 1))
-
         # 32 is batch size # 7 is action size # Tensor (32, 7)
         # Q_target(s', a') # shape torch.Size([32])
-        next_state_Q = self.online_net((next_state, r))
+        next_state_Q = self.online_net(*input_format(next_state))
         best_action: int = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.target_net((next_state, r))[
+        next_Q = self.target_net(*input_format(next_state))[
             np.arange(0, self.batch_size), best_action
         ]
         # !done ならまだゲーム終了してないので，1で考慮する

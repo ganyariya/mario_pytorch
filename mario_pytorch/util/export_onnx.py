@@ -1,3 +1,9 @@
+"""
+https://github.com/pytorch/pytorch/issues/22488#issuecomment-630140460
+http://kaga100man.com/2019/03/25/post-102/
+https://dajiro.com/entry/2020/06/27/160255
+https://teratail.com/questions/277420
+"""
 from typing import Callable, Any
 
 import torch
@@ -10,9 +16,11 @@ def export_onnx(
     model: Module, input: torch.Tensor, transform: Callable, file_name="rnn.onnx"
 ) -> None:
     input = transform(input)
-    r = REWARD.repeat((input.shape[0], 1))
-    k = (input, r)
-    # torch.onnx.export(model, k, file_name)
+    torch.onnx.export(
+        model,
+        (input, REWARD.repeat((input.shape[0], 1))),
+        file_name,
+    )
 
 
 def transform_mario_input(input: torch.Tensor) -> torch.Tensor:

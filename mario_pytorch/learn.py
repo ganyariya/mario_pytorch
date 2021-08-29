@@ -1,6 +1,5 @@
 """
 https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
-https://github.com/YuansongFeng/MadMario/blob/master/agent.py
 """
 
 import datetime
