@@ -230,8 +230,8 @@ class Mario(BaseMario):
         return loss.item()
 
     def sync_Q_target(self) -> None:
-        self.target_net.layers.load_state_dict(self.online_net.layers.state_dict())
-        for p in self.target_net.layers.parameters():
+        self.target_net.load_state_dict(self.online_net.state_dict())
+        for p in self.target_net.parameters():
             p.requires_grad = False
 
     def save(self) -> None:
