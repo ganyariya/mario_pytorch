@@ -3,6 +3,7 @@ from typing import *
 from pathlib import Path
 from collections import deque
 from collections import OrderedDict
+from copy import deepcopy
 
 import torch
 import numpy as np
@@ -22,9 +23,9 @@ class BaseMario:
         self.use_cuda = torch.cuda.is_available()
 
         # Mario's DNN to predict the most optimal action - we implement this in the Learn section
-        self.net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
+        self.online_net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
-            self.net = self.net.to(device="cuda")
+            self.online_net = self.online_net.to(device="cuda")
 
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
@@ -36,7 +37,7 @@ class BaseMario:
         self.batch_size = 32
 
         self.gamma = 0.9
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
+        self.optimizer = torch.optim.Adam(self.online_net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
         self.burnin = 1e4  # 訓練前に経験させるFrame回数
@@ -66,7 +67,7 @@ class BaseMario:
 
             # (4, 84, 84) -> (1, 4, 84, 84)
             state = state.unsqueeze(0)
-            action_values = self.net(state, model="online")
+            action_values = self.online_net(state)
             action_idx = torch.argmax(action_values, axis=1).item()
 
         # decrease exploration_rate
@@ -87,6 +88,8 @@ class Mario(BaseMario):
     ):
         super().__init__(state_dim, action_dim)
         self.save_dir = save_dir
+        self.target_net = deepcopy(self.online_net)
+        self.sync_Q_target()
 
     def cache(
         self,
@@ -148,6 +151,8 @@ class Mario(BaseMario):
         Online を学習する
         """
 
+        print(id(self.target_net.layers) - id(self.online_net.layers))
+
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step % self.save_every == 0:
@@ -174,7 +179,7 @@ class Mario(BaseMario):
         return (td_est.mean().item(), loss)
 
     def td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
-        current_Q = self.net(state, model="online")[
+        current_Q = self.online_net(state)[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
         return current_Q
@@ -205,10 +210,10 @@ class Mario(BaseMario):
         """
         # 32 is batch size # 7 is action size # Tensor (32, 7)
         # next_state_Q は online で決定する
-        next_state_Q = self.net(next_state, model="online")
+        next_state_Q = self.online_net(next_state)
         # 行方向に演算する (32, )
         best_action: int = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.net(next_state, model="target")[
+        next_Q = self.target_net(next_state)[
             np.arange(0, self.batch_size), best_action
         ]  # Q_target(s', a') # shape torch.Size([32])
 
@@ -227,14 +232,19 @@ class Mario(BaseMario):
         return loss.item()
 
     def sync_Q_target(self) -> None:
-        self.net.target.load_state_dict(self.net.online.state_dict())
+        self.target_net.layers.load_state_dict(self.online_net.layers.state_dict())
+        for p in self.target_net.layers.parameters():
+            p.requires_grad = False
 
     def save(self) -> None:
         save_path = (
             self.save_dir / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
         )
         torch.save(
-            dict(model=self.net.state_dict(), exploration_rate=self.exploration_rate),
+            dict(
+                model=self.online_net.state_dict(),
+                exploration_rate=self.exploration_rate,
+            ),
             save_path,
         )
         print(f"MarioNet saved to {save_path} at step {self.curr_step}")
@@ -245,4 +255,4 @@ class LearnedMario(BaseMario):
         self, state_dim: Tuple[int, int, int], action_dim: int, model: OrderedDict
     ):
         super().__init__(state_dim, action_dim)
-        self.net.load_state_dict(model)
+        self.online_net.load_state_dict(model)
