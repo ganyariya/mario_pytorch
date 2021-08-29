@@ -22,48 +22,34 @@ class MarioNet(nn.Module):
 
         # https://www.koi.mashykom.com/deep_learning.html
 
-        # Image
-        self.image_conv1 = nn.Conv2d(
-            in_channels=c, out_channels=32, kernel_size=8, stride=4
+        self.image_block = nn.Sequential(
+            nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Flatten(),
         )
-        self.image_relu1 = nn.ReLU()
-        self.image_conv2 = nn.Conv2d(
-            in_channels=32, out_channels=64, kernel_size=4, stride=2
-        )
-        self.image_relu2 = nn.ReLU()
-        self.image_conv3 = nn.Conv2d(
-            in_channels=64, out_channels=64, kernel_size=3, stride=1
-        )
-        self.image_relu3 = nn.ReLU()
-        self.image_flatten = nn.Flatten()
 
-        # Reward
-        self.reward_fc = nn.Linear(5, 20)
-        self.reward_relu = nn.ReLU()
+        self.reward_block = nn.Sequential(
+            nn.Linear(5, 20),
+            nn.ReLU(),
+        )
 
-        # Merge
-        self.merge_fc1 = nn.Linear(3136 + 20, 512)
-        self.merge_relu = nn.ReLU()
-        self.merge_fc2 = nn.Linear(512, output_dim)
+        self.merge_block = nn.Sequential(
+            nn.Linear(3136 + 20, 512),
+            nn.ReLU(),
+            nn.Linear(512, output_dim),
+        )
 
     def forward(self, x, y) -> nn.Module:
         # x image (32, 4, 84, 84) (32 batch_size, 4つの白黒Frameをまとめている, 縦, 横)
         # y reward
-        x = self.image_conv1(x)
-        x = self.image_relu1(x)
-        x = self.image_conv2(x)
-        x = self.image_relu2(x)
-        x = self.image_conv3(x)
-        x = self.image_relu3(x)
-        x = self.image_flatten(x)
+        x = self.image_block(x)
+        y = self.reward_block(y)
 
-        y = self.reward_fc(y)
-        y = self.reward_relu(y)
-
-        # x (32, 3136)  y (32, 20)
-        # z (32, 3136 + 20)
+        # x (32, 3136)  y (32, 20)  z (32, 3136 + 20)
         z = torch.cat((x, y), 1)
-        z = self.merge_fc1(z)
-        z = self.merge_relu(z)
-        z = self.merge_fc2(z)
+        z = self.merge_block(z)
         return z
