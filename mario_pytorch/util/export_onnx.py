@@ -3,6 +3,8 @@ from typing import Callable, Any
 import torch
 from torch.nn import Module
 
+REWARD = torch.Tensor([[10, 10, 10, 10, 10]])
+
 
 def export_onnx(
     model: Module, input: torch.Tensor, transform: Callable, file_name="rnn.onnx"

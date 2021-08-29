@@ -11,6 +11,8 @@ import numpy as np
 from gym.wrappers.frame_stack import LazyFrames
 from mario_pytorch.agent.mario_net import MarioNet
 
+REWARD = torch.Tensor([[10, 10, 10, 10, 10]])
+
 
 class BaseMario:
     def __init__(
@@ -40,7 +42,7 @@ class BaseMario:
         self.optimizer = torch.optim.Adam(self.online_net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
-        self.burnin = 1e4  # 訓練前に経験させるFrame回数
+        self.burnin = 200  # 訓練前に経験させるFrame回数
         self.learn_every = 3  # learn_every Frame ごとに Q_online を学習させる
         self.sync_every = 1e4  # Q_target & Q_online の同期タイミング
 
@@ -67,7 +69,8 @@ class BaseMario:
 
             # (4, 84, 84) -> (1, 4, 84, 84)
             state = state.unsqueeze(0)
-            action_values = self.online_net(state)
+            r = REWARD.repeat((state.shape[0], 1))
+            action_values = self.online_net((state, r))
             action_idx = torch.argmax(action_values, axis=1).item()
 
         # decrease exploration_rate
@@ -177,7 +180,10 @@ class Mario(BaseMario):
         return (td_est.mean().item(), loss)
 
     def td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
-        current_Q = self.online_net(state)[
+        # r: (num_of_state, len(報酬関数の要素の数)) の 2次元Tensor
+        num_of_states = state.shape[0]
+        r = REWARD.repeat((num_of_states, 1))
+        current_Q = self.online_net((state, r))[
             np.arange(0, self.batch_size), action
         ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
         return current_Q
@@ -206,15 +212,16 @@ class Mario(BaseMario):
         -----
         torch.no_grad で勾配計算を無効にしている
         """
-        # 32 is batch size # 7 is action size # Tensor (32, 7)
-        # next_state_Q は online で決定する
-        next_state_Q = self.online_net(next_state)
-        # 行方向に演算する (32, )
-        best_action: int = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.target_net(next_state)[
-            np.arange(0, self.batch_size), best_action
-        ]  # Q_target(s', a') # shape torch.Size([32])
+        num_of_states = next_state.shape[0]
+        r = REWARD.repeat((num_of_states, 1))
 
+        # 32 is batch size # 7 is action size # Tensor (32, 7)
+        # Q_target(s', a') # shape torch.Size([32])
+        next_state_Q = self.online_net((next_state, r))
+        best_action: int = torch.argmax(next_state_Q, axis=1)
+        next_Q = self.target_net((next_state, r))[
+            np.arange(0, self.batch_size), best_action
+        ]
         # !done ならまだゲーム終了してないので，1で考慮する
         # done だと終わっているので 0で考慮しない
         # r + \gamma * next_Q * is_done
