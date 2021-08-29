@@ -11,7 +11,7 @@ import numpy as np
 from gym.wrappers.frame_stack import LazyFrames
 from mario_pytorch.agent.mario_net import MarioNet
 
-REWARD = torch.Tensor([[10, 10, 10, 10, 10]])
+REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
 
 
 class BaseMario:
