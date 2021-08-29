@@ -25,6 +25,7 @@ from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
 from mario_pytorch.util.get_env_name import get_env_name
 from mario_pytorch.util.config import Config
+from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 
 # ----------------------------------------------------------------------
 
@@ -57,6 +58,7 @@ mario = Mario(
     save_dir=save_dir,
 )
 logger = MetricLogger(save_dir)
+export_onnx(mario.online_net, env.reset(), transform_mario_input)
 
 for e in range(config.EPISODES):
 

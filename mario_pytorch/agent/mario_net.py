@@ -1,4 +1,4 @@
-import copy
+from typing import Tuple
 from torch import nn
 
 HW_SIZE = 84
@@ -9,7 +9,7 @@ class MarioNet(nn.Module):
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
     """
 
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim: Tuple[int, int, int], output_dim: int):
         super().__init__()
         c, h, w = input_dim
 
@@ -20,7 +20,7 @@ class MarioNet(nn.Module):
 
         # https://www.koi.mashykom.com/deep_learning.html
         # チャンネル数を増やして 画像サイズを小さくする
-        self.online = nn.Sequential(
+        self.layers = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
             nn.ReLU(),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
@@ -33,14 +33,6 @@ class MarioNet(nn.Module):
             nn.Linear(512, output_dim),
         )
 
-        self.target = copy.deepcopy(self.online)
-
-        # Q_target parameters are frozen.
-        for p in self.target.parameters():
-            p.requires_grad = False
-
-    def forward(self, input, model: str) -> nn.Module:
-        if model == "online":
-            return self.online(input)
-        if model == "target":
-            return self.target(input)
+    def forward(self, x) -> nn.Module:
+        x = self.layers(x)
+        return x
