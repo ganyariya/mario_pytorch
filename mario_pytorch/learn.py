@@ -9,7 +9,6 @@ from pathlib import Path
 from os import path
 
 import yaml
-import torch
 import gym_super_mario_bros
 
 from gym.wrappers import FrameStack
