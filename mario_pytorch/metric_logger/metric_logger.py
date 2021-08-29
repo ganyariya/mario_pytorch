@@ -1,14 +1,18 @@
 import time
 import datetime
+from typing import List
 
 from pathlib import Path
+from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+writer = SummaryWriter()
+
 
 class MetricLogger:
-    def __init__(self, save_dir: Path):
+    def __init__(self, save_dir: Path) -> None:
         self.save_log = save_dir / "log"
         with open(self.save_log, "w") as f:
             f.write(
@@ -21,25 +25,39 @@ class MetricLogger:
         self.ep_avg_losses_plot = save_dir / "loss_plot.jpg"
         self.ep_avg_qs_plot = save_dir / "q_plot.jpg"
 
-        # History metrics
-        self.ep_rewards = []
-        self.ep_lengths = []
-        self.ep_avg_losses = []
-        self.ep_avg_qs = []
+        # 1エピソードのみ
+        self.curr_ep_reward = 0.0
+        self.curr_ep_length = 0
+        self.curr_ep_loss = 0.0
+        self.curr_ep_q = 0.0
+        self.curr_ep_loss_length = 0  # 1エピソードに含まれたロス計算回数
+
+        # スタートからゴール = 1 エピソード
+        # 1エピソードごとのログをリストで保存する（Nエピソード）
+        self.ep_rewards: List[float] = []
+        self.ep_lengths: List[float] = []
+        self.ep_avg_losses: List[float] = []
+        self.ep_avg_qs: List[float] = []
 
         # Moving averages, added for every call to record()
-        self.moving_avg_ep_rewards = []
-        self.moving_avg_ep_lengths = []
-        self.moving_avg_ep_avg_losses = []
-        self.moving_avg_ep_avg_qs = []
+        self.moving_avg_ep_rewards: List[float] = []
+        self.moving_avg_ep_lengths: List[float] = []
+        self.moving_avg_ep_avg_losses: List[float] = []
+        self.moving_avg_ep_avg_qs: List[float] = []
 
         # Current episode metric
-        self.init_episode()
+        self._init_episode()
 
         # Timing
         self.record_time = time.time()
 
-    def log_step(self, reward: float, loss: float, q: float):
+    def log_step(self, reward: float, loss: float, q: float) -> None:
+        """1フレーム(正確にはnum_tack Frame)ごとに reward loss q を加算する.
+
+        Notes
+        -----
+        1 Episode = マリオがスタートからゴールするまで
+        """
         self.curr_ep_reward += reward
         self.curr_ep_length += 1
         if loss:
@@ -47,29 +65,40 @@ class MetricLogger:
             self.curr_ep_q += q
             self.curr_ep_loss_length += 1
 
-    def log_episode(self):
-        "Mark end of episode"
-        self.ep_rewards.append(self.curr_ep_reward)
-        self.ep_lengths.append(self.curr_ep_length)
+    def log_episode(self) -> None:
+        """1エピソードごとのログを保存する."""
         if self.curr_ep_loss_length == 0:
             ep_avg_loss = 0
             ep_avg_q = 0
         else:
             ep_avg_loss = np.round(self.curr_ep_loss / self.curr_ep_loss_length, 5)
             ep_avg_q = np.round(self.curr_ep_q / self.curr_ep_loss_length, 5)
+
+        self.ep_rewards.append(self.curr_ep_reward)
+        self.ep_lengths.append(self.curr_ep_length)
         self.ep_avg_losses.append(ep_avg_loss)
         self.ep_avg_qs.append(ep_avg_q)
 
-        self.init_episode()
+        self._init_episode()
 
-    def init_episode(self):
+    def _init_episode(self) -> None:
         self.curr_ep_reward = 0.0
         self.curr_ep_length = 0
         self.curr_ep_loss = 0.0
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
 
-    def record(self, episode: float, epsilon: float, step: int):
+    def record(self, episode: float, epsilon: float, step: int) -> None:
+        """Record というまとまった単位で保存する.
+
+        Notes
+        -----
+        Record は エポックではない
+        おそらく学習がうまく行っているかを見るために，
+        マリオevery_record体（every_recordエピソード）ごとに平均を取る
+
+        なぜか 100 の平均とっているけど every_record じゃないのかな
+        """
         mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
         mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
         mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
@@ -82,6 +111,11 @@ class MetricLogger:
         last_record_time = self.record_time
         self.record_time = time.time()
         time_since_last_record = np.round(self.record_time - last_record_time, 3)
+
+        writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
+        writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
+        writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
+        writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
 
         print(
             f"Episode {episode} - "
