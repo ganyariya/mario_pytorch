@@ -33,6 +33,7 @@ class BaseMario:
         self.online_net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.online_net = self.online_net.to(device="cuda")
+        print(self.online_net)
 
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
@@ -47,7 +48,7 @@ class BaseMario:
         self.optimizer = torch.optim.Adam(self.online_net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
-        self.burnin = 200  # 訓練前に経験させるFrame回数
+        self.burnin = 100000  # 訓練前に経験させるFrame回数
         self.learn_every = 3  # learn_every Frame ごとに Q_online を学習させる
         self.sync_every = 1e4  # Q_target & Q_online の同期タイミング
 
