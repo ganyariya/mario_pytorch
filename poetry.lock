@@ -186,6 +186,19 @@ requests-oauthlib = ">=0.7.0"
 tool = ["click (>=6.0.0)"]
 
 [[package]]
+name = "graphviz"
+version = "0.17"
+description = "Simple Python interface for Graphviz"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+dev = ["tox (>=3)", "flake8", "pep8-naming", "wheel", "twine"]
+docs = ["sphinx (>=1.8)", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
+test = ["mock (>=3)", "pytest (>=5.2)", "pytest-mock (>=2)", "pytest-cov"]
+
+[[package]]
 name = "grpcio"
 version = "1.39.0"
 description = "HTTP/2-based RPC framework"
@@ -703,6 +716,18 @@ torch = "1.9.0"
 scipy = ["scipy"]
 
 [[package]]
+name = "torchviz"
+version = "0.0.2"
+description = "A small package to create visualizations of PyTorch execution graphs"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+graphviz = "*"
+torch = "*"
+
+[[package]]
 name = "tqdm"
 version = "4.62.2"
 description = "Fast, Extensible Progress Meter"
@@ -761,7 +786,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "6eb3f50eba1b7b0ff5a4ed86e4480265b633baf99d5106bf2ef1a179d59dbaca"
+content-hash = "e5a04452d327f47ba78c51338da1067de6dc0d6f0ee8ff4707de0c054bb3f6e1"
 
 [metadata.files]
 absl-py = [
@@ -842,6 +867,10 @@ google-auth = [
 google-auth-oauthlib = [
     {file = "google-auth-oauthlib-0.4.5.tar.gz", hash = "sha256:4ab58e6c3dc6ccf112f921fcced40e5426fba266768986ea502228488276eaba"},
     {file = "google_auth_oauthlib-0.4.5-py2.py3-none-any.whl", hash = "sha256:b5a1ce7c617d247ccb2dfbba9d4bfc734b41096803d854a2c52592ae80150a67"},
+]
+graphviz = [
+    {file = "graphviz-0.17-py3-none-any.whl", hash = "sha256:5dadec94046d82adaae6019311a30e0487536d9d5a60d85451f0ba32f9fc6559"},
+    {file = "graphviz-0.17.zip", hash = "sha256:ef6e2c5deb9cdcc0c7eece1d89625fd07b0f2208ea2bcb483520907ddf8b4e12"},
 ]
 grpcio = [
     {file = "grpcio-1.39.0-cp27-cp27m-macosx_10_10_x86_64.whl", hash = "sha256:4163e022f365406be2da78db890035463371effea172300ce5af8a768142baf3"},
@@ -1412,6 +1441,9 @@ torchvision = [
     {file = "torchvision-0.10.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:20a57ce42fa20c26d800c65d5b88dbaaa115a01f4f5623d41abfb182b854f199"},
     {file = "torchvision-0.10.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:a30466893a5b97073c992859f3645e3e1f41daf2c1b4db6cb2ac8ec7d0e1f6bc"},
     {file = "torchvision-0.10.0-cp39-cp39-win_amd64.whl", hash = "sha256:da65af25b51caf43327ecb3ccf550eedfd62d1f73511db44370b4b9522569b8d"},
+]
+torchviz = [
+    {file = "torchviz-0.0.2.tar.gz", hash = "sha256:c790b4c993f783433604bf610cfa58bb0a031260be4ee5196a00c0884e768051"},
 ]
 tqdm = [
     {file = "tqdm-4.62.2-py2.py3-none-any.whl", hash = "sha256:80aead664e6c1672c4ae20dc50e1cdc5e20eeff9b14aa23ecd426375b28be588"},

@@ -151,8 +151,6 @@ class Mario(BaseMario):
         Online を学習する
         """
 
-        print(id(self.target_net.layers) - id(self.online_net.layers))
-
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
         if self.curr_step % self.save_every == 0:
