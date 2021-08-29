@@ -15,5 +15,7 @@ class CustomRewardEnv(gym.Wrapper):
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
+        self.reward = reward
+        print(self.reward, done, info)
         # ここにカスタム Reward を計算する
         return state, self.reward, done, info
