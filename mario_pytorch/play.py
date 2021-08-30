@@ -22,9 +22,9 @@ from mario_pytorch.util.config import Config
 config_path = Path(__file__).parents[1] / "config" / "base.yaml"
 config = Config.create(str(config_path))
 
-checkpoint_name = "2021-08-25T15-32-41"
+checkpoint_name = "2021-08-29T15-32-18"
 checkpoint = Path(__file__).parents[1] / "checkpoints" / checkpoint_name
-model_name = "mario_net_5.chkpt"
+model_name = "mario_net_10.chkpt"
 model_path = checkpoint / model_name
 model = torch.load(model_path)["model"]
 
@@ -48,14 +48,18 @@ for e in range(config.EPISODES):
 
     # state.shape (4, 84, 84)  state.frame_shape (84, 84)
     state = env.reset()
+    reward_sum = 0
 
     while True:
         action = mario.act(state)
         env.render()
 
         next_state, reward, done, info = env.step(action)
+        reward_sum += reward
 
         state = next_state
 
         if done or info["flag_get"]:
             break
+
+    print(reward_sum)
