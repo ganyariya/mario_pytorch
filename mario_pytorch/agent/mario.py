@@ -53,6 +53,22 @@ class BaseMario:
         self.sync_every = 1e4  # Q_target & Q_online の同期タイミング
 
     def act(self, state: LazyFrames) -> int:
+        pass
+
+
+class Mario(BaseMario):
+    def __init__(
+        self,
+        state_dim: Tuple[int, int, int],
+        action_dim: int,
+        save_dir: Path,
+    ):
+        super().__init__(state_dim, action_dim)
+        self.save_dir = save_dir
+        self.target_net = deepcopy(self.online_net)
+        self.sync_Q_target()
+
+    def act(self, state: LazyFrames) -> int:
         """
         Given a state, choose an epsilon-greedy action and update value of step.
 
@@ -85,19 +101,6 @@ class BaseMario:
         # increment step
         self.curr_step += 1
         return action_idx
-
-
-class Mario(BaseMario):
-    def __init__(
-        self,
-        state_dim: Tuple[int, int, int],
-        action_dim: int,
-        save_dir: Path,
-    ):
-        super().__init__(state_dim, action_dim)
-        self.save_dir = save_dir
-        self.target_net = deepcopy(self.online_net)
-        self.sync_Q_target()
 
     def cache(
         self,
@@ -261,3 +264,38 @@ class LearnedMario(BaseMario):
     ):
         super().__init__(state_dim, action_dim)
         self.online_net.load_state_dict(model)
+        self.exploration_rate = 0.8  # でかすぎるので小さく
+
+    def act(self, state: LazyFrames) -> int:
+        """
+        Given a state, choose an epsilon-greedy action and update value of step.
+
+        Inputs:
+        state(LazyFrame): A single observation of the current state, dimension is (state_dim)
+        Outputs:
+        action_idx (int): An integer representing which action Mario will perform
+        """
+        # EXPLORE
+        if np.random.rand() < self.exploration_rate:
+            action_idx = np.random.randint(self.action_dim)
+
+        # EXPLOIT
+        else:
+            state = state.__array__()
+            if self.use_cuda:
+                state = torch.tensor(state).cuda()
+            else:
+                state = torch.tensor(state)
+
+            # (4, 84, 84) -> (1, 4, 84, 84)
+            state = state.unsqueeze(0)
+            action_values = self.online_net(*input_format(state))
+            action_idx = torch.argmax(action_values, axis=1).item()
+
+        # decrease exploration_rate
+        self.exploration_rate *= self.exploration_rate_decay
+        self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
+
+        # increment step
+        self.curr_step += 1
+        return action_idx
