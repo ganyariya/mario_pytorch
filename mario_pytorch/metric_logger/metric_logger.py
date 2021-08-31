@@ -26,7 +26,7 @@ def set_logger(save_dir: Path) -> None:
     getLogger("matplotlib").setLevel(WARNING)
 
     formatter = Formatter(
-        fmt="%(asctime)s - %(name)s - %(levelname)s \n%(message)s",
+        fmt="%(asctime)s - %(name)s - %(levelname)s\n%(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
     )
 
@@ -44,19 +44,13 @@ writer: Final[SummaryWriter] = SummaryWriter()
 
 
 class MetricLogger:
-    def __init__(self, save_dir: Path, base_mario: BaseMario) -> None:
+    def __init__(self, save_dir: Path) -> None:
         set_logger(save_dir)
 
         self.save_dir: Final[Path] = save_dir
         self.save_metric_log: Final[Path] = save_dir / "metric_log"
         self.logger: Final[Logger] = getLogger(__name__)
-
-        with open(self.save_metric_log, "w") as f:
-            f.write(
-                f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
-                f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
-                f"{'TimeDelta':>15}{'Time':>20}\n"
-            )
+        self._init_metric_log_file(self.save_metric_log)
 
         # Images
         self.ep_rewards_plot = save_dir / "reward_plot.jpg"
@@ -83,8 +77,6 @@ class MetricLogger:
         self.moving_avg_ep_lengths: List[float] = []
         self.moving_avg_ep_avg_losses: List[float] = []
         self.moving_avg_ep_avg_qs: List[float] = []
-
-        self.base_mario = base_mario
 
         # Current episode metric
         self._init_episode()
@@ -122,13 +114,6 @@ class MetricLogger:
 
         self._init_episode()
 
-    def _init_episode(self) -> None:
-        self.curr_ep_reward = 0.0
-        self.curr_ep_length = 0
-        self.curr_ep_loss = 0.0
-        self.curr_ep_q = 0.0
-        self.curr_ep_loss_length = 0
-
     def record(self, episode: float, epsilon: float, step: int) -> None:
         """Record というまとまった単位で保存する.
 
@@ -158,9 +143,7 @@ class MetricLogger:
         writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
         writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
         writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
-        writer.add_scalar(
-            "Episode/Exploration", self.base_mario.exploration_rate, episode
-        )
+        writer.add_scalar("Episode/Exploration", epsilon, episode)
 
         self.logger.info(
             f"Episode {episode} - "
@@ -171,18 +154,56 @@ class MetricLogger:
             f"Mean Loss {mean_ep_loss} - "
             f"Mean Q Value {mean_ep_q} - "
             f"Time Delta {time_since_last_record} - "
-            f"Time {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
         )
 
-        with open(self.save_metric_log, "a") as f:
+        self._append_write_metric_log_file(
+            self.save_metric_log,
+            episode,
+            step,
+            epsilon,
+            mean_ep_reward,
+            mean_ep_length,
+            mean_ep_loss,
+            mean_ep_q,
+            time_since_last_record,
+        )
+
+        for metric in ["ep_rewards", "ep_lengths", "ep_avg_losses", "ep_avg_qs"]:
+            plt.plot(getattr(self, f"moving_avg_{metric}"))
+            plt.savefig(getattr(self, f"{metric}_plot"))
+            plt.clf()
+
+    def _init_episode(self) -> None:
+        self.curr_ep_reward = 0.0
+        self.curr_ep_length = 0
+        self.curr_ep_loss = 0.0
+        self.curr_ep_q = 0.0
+        self.curr_ep_loss_length = 0
+
+    def _init_metric_log_file(self, log_path: Path) -> None:
+        with open(log_path, "w") as f:
+            f.write(
+                f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
+                f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
+                f"{'TimeDelta':>15}{'Time':>20}\n"
+            )
+
+    def _append_write_metric_log_file(
+        self,
+        log_path: Path,
+        episode: int,
+        step: int,
+        epsilon: float,
+        mean_ep_reward: float,
+        mean_ep_length: float,
+        mean_ep_loss: float,
+        mean_ep_q: float,
+        time_since_last_record: float,
+    ) -> None:
+        with open(log_path, "a") as f:
             f.write(
                 f"{episode:8d}{step:10d}{epsilon:10.3f}"
                 f"{mean_ep_reward:15.3f}{mean_ep_length:15.3f}{mean_ep_loss:15.3f}{mean_ep_q:15.3f}"
                 f"{time_since_last_record:15.3f}"
                 f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"
             )
-
-        for metric in ["ep_rewards", "ep_lengths", "ep_avg_losses", "ep_avg_qs"]:
-            plt.plot(getattr(self, f"moving_avg_{metric}"))
-            plt.savefig(getattr(self, f"{metric}_plot"))
-            plt.clf()
