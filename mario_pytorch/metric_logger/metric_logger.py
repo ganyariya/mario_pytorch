@@ -1,7 +1,7 @@
 import time
 import datetime
 
-from typing import List
+from typing import List, Final
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +15,8 @@ writer = SummaryWriter()
 
 class MetricLogger:
     def __init__(self, save_dir: Path, base_mario: BaseMario) -> None:
-        self.save_log = save_dir / "log"
+        self.save_dir: Final[Path] = save_dir
+        self.save_log: Final[Path] = save_dir / "log"
         with open(self.save_log, "w") as f:
             f.write(
                 f"{'Episode':>8}{'Step':>8}{'Epsilon':>10}{'MeanReward':>15}"
