@@ -35,7 +35,7 @@ mario = Mario(
     action_dim=env.action_space.n,
     save_dir=save_dir,
 )
-logger = MetricLogger(save_dir, mario)
+logger = MetricLogger(save_dir)
 export_onnx(mario.online_net, env.reset(), transform_mario_input)
 
 for e in range(config.EPISODES):
