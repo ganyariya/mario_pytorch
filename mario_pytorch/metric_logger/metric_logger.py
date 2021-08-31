@@ -3,6 +3,15 @@ import datetime
 
 from typing import List, Final
 from pathlib import Path
+from logging import (
+    getLogger,
+    Formatter,
+    StreamHandler,
+    FileHandler,
+    Logger,
+    INFO,
+    WARNING,
+)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,19 +19,46 @@ import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from mario_pytorch.agent.mario import BaseMario
 
-writer = SummaryWriter()
+
+def set_logger(save_dir: Path) -> None:
+    """Root-Logger を初期化する."""
+    logger = getLogger()
+    getLogger("matplotlib").setLevel(WARNING)
+
+    formatter = Formatter(
+        fmt="%(asctime)s - %(name)s - %(levelname)s \n%(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+    )
+
+    console_handler = StreamHandler()
+    console_handler.setFormatter(formatter)
+    file_handler = FileHandler(save_dir / "logger_log")
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+    logger.setLevel(INFO)
+
+
+writer: Final[SummaryWriter] = SummaryWriter()
 
 
 class MetricLogger:
     def __init__(self, save_dir: Path, base_mario: BaseMario) -> None:
+        set_logger(save_dir)
+
         self.save_dir: Final[Path] = save_dir
-        self.save_log: Final[Path] = save_dir / "log"
-        with open(self.save_log, "w") as f:
+        self.save_metric_log: Final[Path] = save_dir / "metric_log"
+        self.logger: Final[Logger] = getLogger(__name__)
+
+        with open(self.save_metric_log, "w") as f:
             f.write(
-                f"{'Episode':>8}{'Step':>8}{'Epsilon':>10}{'MeanReward':>15}"
+                f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
                 f"{'TimeDelta':>15}{'Time':>20}\n"
             )
+
+        # Images
         self.ep_rewards_plot = save_dir / "reward_plot.jpg"
         self.ep_lengths_plot = save_dir / "length_plot.jpg"
         self.ep_avg_losses_plot = save_dir / "loss_plot.jpg"
@@ -117,6 +153,7 @@ class MetricLogger:
         self.record_time = time.time()
         time_since_last_record = np.round(self.record_time - last_record_time, 3)
 
+        # TensorBoard
         writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
         writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
         writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
@@ -125,7 +162,7 @@ class MetricLogger:
             "Episode/Exploration", self.base_mario.exploration_rate, episode
         )
 
-        print(
+        self.logger.info(
             f"Episode {episode} - "
             f"Step {step} - "
             f"Epsilon {epsilon} - "
@@ -137,9 +174,9 @@ class MetricLogger:
             f"Time {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
         )
 
-        with open(self.save_log, "a") as f:
+        with open(self.save_metric_log, "a") as f:
             f.write(
-                f"{episode:8d}{step:8d}{epsilon:10.3f}"
+                f"{episode:8d}{step:10d}{epsilon:10.3f}"
                 f"{mean_ep_reward:15.3f}{mean_ep_length:15.3f}{mean_ep_loss:15.3f}{mean_ep_q:15.3f}"
                 f"{time_since_last_record:15.3f}"
                 f"{datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'):>20}\n"
