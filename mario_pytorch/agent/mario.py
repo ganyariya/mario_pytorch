@@ -53,22 +53,6 @@ class BaseMario:
         self.sync_every = 1e4  # Q_target & Q_online の同期タイミング
 
     def act(self, state: LazyFrames) -> int:
-        pass
-
-
-class Mario(BaseMario):
-    def __init__(
-        self,
-        state_dim: Tuple[int, int, int],
-        action_dim: int,
-        save_dir: Path,
-    ):
-        super().__init__(state_dim, action_dim)
-        self.save_dir = save_dir
-        self.target_net = deepcopy(self.online_net)
-        self.sync_Q_target()
-
-    def act(self, state: LazyFrames) -> int:
         """
         Given a state, choose an epsilon-greedy action and update value of step.
 
@@ -101,6 +85,19 @@ class Mario(BaseMario):
         # increment step
         self.curr_step += 1
         return action_idx
+
+
+class Mario(BaseMario):
+    def __init__(
+        self,
+        state_dim: Tuple[int, int, int],
+        action_dim: int,
+        save_dir: Path,
+    ):
+        super().__init__(state_dim, action_dim)
+        self.save_dir = save_dir
+        self.target_net = deepcopy(self.online_net)
+        self.sync_Q_target()
 
     def cache(
         self,
