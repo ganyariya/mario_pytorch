@@ -1,18 +1,20 @@
 import time
 import datetime
-from typing import List
 
+from typing import List
 from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+from torch.utils.tensorboard import SummaryWriter
+from mario_pytorch.agent.mario import BaseMario
 
 writer = SummaryWriter()
 
 
 class MetricLogger:
-    def __init__(self, save_dir: Path) -> None:
+    def __init__(self, save_dir: Path, base_mario: BaseMario) -> None:
         self.save_log = save_dir / "log"
         with open(self.save_log, "w") as f:
             f.write(
@@ -44,6 +46,8 @@ class MetricLogger:
         self.moving_avg_ep_lengths: List[float] = []
         self.moving_avg_ep_avg_losses: List[float] = []
         self.moving_avg_ep_avg_qs: List[float] = []
+
+        self.base_mario = base_mario
 
         # Current episode metric
         self._init_episode()
@@ -116,6 +120,9 @@ class MetricLogger:
         writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
         writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
         writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
+        writer.add_scalar(
+            "Episode/Exploration", self.base_mario.exploration_rate, episode
+        )
 
         print(
             f"Episode {episode} - "

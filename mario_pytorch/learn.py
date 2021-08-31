@@ -49,14 +49,14 @@ env = JoypadSpace(env, SIMPLE_MOVEMENT)
 env = SkipFrame(env, skip=config.SKIP_FRAME)
 env = GrayScaleObservation(env)
 env = ResizeObservation(env, shape=config.SHAPE)
-env = FrameStack(env, num_stack=config.NUM_STACK)  # 4Frame まとめて取り出す
+env = FrameStack(env, num_stack=config.NUM_STACK)
 
 mario = Mario(
     state_dim=(config.NUM_STACK, config.SHAPE, config.SHAPE),
     action_dim=env.action_space.n,
     save_dir=save_dir,
 )
-logger = MetricLogger(save_dir)
+logger = MetricLogger(save_dir, mario)
 export_onnx(mario.online_net, env.reset(), transform_mario_input)
 
 for e in range(config.EPISODES):
