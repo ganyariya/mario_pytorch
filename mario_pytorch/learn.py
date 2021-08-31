@@ -3,28 +3,16 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 """
 
 import datetime
+import yaml
 
 from pathlib import Path
 from os import path
 
-import yaml
-import gym_super_mario_bros
-
-from gym.wrappers import FrameStack
-from nes_py.wrappers import JoypadSpace
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
-
-from mario_pytorch.wrappers import (
-    SkipFrame,
-    GrayScaleObservation,
-    ResizeObservation,
-    CustomRewardEnv,
-)
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
-from mario_pytorch.util.get_env_name import get_env_name
 from mario_pytorch.util.config import Config
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
+from mario_pytorch.util.get_env import get_env
 
 # ----------------------------------------------------------------------
 
@@ -40,16 +28,7 @@ save_dir.mkdir(parents=True)
 with open(save_dir / "used_config.yaml", "w") as f:
     yaml.safe_dump(config.dict(), f, encoding="utf-8", allow_unicode=True)
 
-# 4 Consecutive GrayScale Frames Set [4, 84, 84]
-env = gym_super_mario_bros.make(
-    get_env_name(config.WORLD, config.STAGE, config.VERSION)
-)
-env = CustomRewardEnv(env)
-env = JoypadSpace(env, SIMPLE_MOVEMENT)
-env = SkipFrame(env, skip=config.SKIP_FRAME)
-env = GrayScaleObservation(env)
-env = ResizeObservation(env, shape=config.SHAPE)
-env = FrameStack(env, num_stack=config.NUM_STACK)
+env = get_env(config)
 
 mario = Mario(
     state_dim=(config.NUM_STACK, config.SHAPE, config.SHAPE),
