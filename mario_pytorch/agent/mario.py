@@ -1,9 +1,11 @@
 import random
-from typing import *
+
+from typing import Tuple, Optional
 from pathlib import Path
 from collections import deque
 from collections import OrderedDict
 from copy import deepcopy
+from logging import getLogger
 
 import torch
 import numpy as np
@@ -11,7 +13,9 @@ import numpy as np
 from gym.wrappers.frame_stack import LazyFrames
 from mario_pytorch.agent.mario_net import MarioNet
 
+
 REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
+logger = getLogger(__name__)
 
 
 def input_format(state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -29,16 +33,15 @@ class BaseMario:
         self.action_dim = action_dim
         self.use_cuda = torch.cuda.is_available()
 
-        # Mario's DNN to predict the most optimal action - we implement this in the Learn section
         self.online_net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
         if self.use_cuda:
             self.online_net = self.online_net.to(device="cuda")
-        print(self.online_net)
+        logger.info(self.online_net)
 
         self.exploration_rate = 1
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
-        self.curr_step = 0  # Frame 回数記憶 (エピソードではない　フレーム)
+        self.curr_step = 0  # Frame 回数記憶 (エピソードではなく フレーム)
         self.save_every = 5e5  # 5e5 Frame ごとにモデル保存
 
         self.memory = deque(maxlen=100000)
@@ -97,7 +100,7 @@ class Mario(BaseMario):
         super().__init__(state_dim, action_dim)
         self.save_dir = save_dir
         self.target_net = deepcopy(self.online_net)
-        self.sync_Q_target()
+        self._sync_Q_target()
 
     def cache(
         self,
@@ -160,9 +163,9 @@ class Mario(BaseMario):
         """
 
         if self.curr_step % self.sync_every == 0:
-            self.sync_Q_target()
+            self._sync_Q_target()
         if self.curr_step % self.save_every == 0:
-            self.save()
+            self._save()
         if self.curr_step < self.burnin:
             return None, None
         if self.curr_step % self.learn_every != 0:
@@ -173,18 +176,18 @@ class Mario(BaseMario):
         state, next_state, action, reward, done = self.recall()
 
         # TD Estimate -- Online (学習)
-        td_est = self.td_estimate(state, action)
+        td_est = self._td_estimate(state, action)
 
         # TD Target -- Target (固定)
-        td_tgt = self.td_target(reward, next_state, done)
+        td_tgt = self._td_target(reward, next_state, done)
 
         # https://colab.research.google.com/github/YutaroOgawa/pytorch_tutorials_jp/blob/main/notebook/4_RL/4_2_mario_rl_tutorial_jp.ipynb#scrollTo=hjDCD1o3PKHX
         # Backpropagate loss through Q_online
-        loss = self.update_Q_online(td_est, td_tgt)
+        loss = self._update_Q_online(td_est, td_tgt)
 
         return (td_est.mean().item(), loss)
 
-    def td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
+    def _td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
         # r: (num_of_state, len(報酬関数の要素の数)) の 2次元Tensor
         current_Q = self.online_net(*input_format(state))[
             np.arange(0, self.batch_size), action
@@ -192,7 +195,7 @@ class Mario(BaseMario):
         return current_Q
 
     @torch.no_grad()
-    def td_target(
+    def _td_target(
         self, reward: torch.Tensor, next_state: torch.Tensor, done: torch.Tensor
     ) -> torch.Tensor:
         """
@@ -227,7 +230,7 @@ class Mario(BaseMario):
         # r + \gamma * next_Q * is_done
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
-    def update_Q_online(
+    def _update_Q_online(
         self, td_estimate: torch.Tensor, td_target: torch.Tensor
     ) -> float:
         loss = self.loss_fn(td_estimate, td_target)
@@ -236,12 +239,12 @@ class Mario(BaseMario):
         self.optimizer.step()  # 重みの更新
         return loss.item()
 
-    def sync_Q_target(self) -> None:
+    def _sync_Q_target(self) -> None:
         self.target_net.load_state_dict(self.online_net.state_dict())
         for p in self.target_net.parameters():
             p.requires_grad = False
 
-    def save(self) -> None:
+    def _save(self) -> None:
         save_path = (
             self.save_dir / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
         )
@@ -252,7 +255,7 @@ class Mario(BaseMario):
             ),
             save_path,
         )
-        print(f"MarioNet saved to {save_path} at step {self.curr_step}")
+        logger.info(f"MarioNet saved to {save_path} at step {self.curr_step}")
 
 
 class LearnedMario(BaseMario):
