@@ -3,10 +3,10 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 """
 
 import datetime
-import yaml
-
-from pathlib import Path
 from os import path
+from pathlib import Path
+
+import yaml
 
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
@@ -30,13 +30,13 @@ with open(save_dir / "used_config.yaml", "w") as f:
 
 env = get_env(config)
 
+logger = MetricLogger(save_dir)
 mario = Mario(
     state_dim=(config.NUM_STACK, config.SHAPE, config.SHAPE),
     action_dim=env.action_space.n,
     save_dir=save_dir,
 )
-logger = MetricLogger(save_dir)
-export_onnx(mario.online_net, env.reset(), transform_mario_input)
+export_onnx(mario.online_net, env.reset(), transform_mario_input, save_dir)
 
 for e in range(config.EPISODES):
 

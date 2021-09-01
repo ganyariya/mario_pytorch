@@ -1,5 +1,6 @@
+from typing import Any, Tuple
+
 import gym
-from typing import Tuple, Any
 
 StepRet = Tuple[Any, float, bool, dict]
 

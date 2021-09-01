@@ -1,9 +1,8 @@
 import gym
 import numpy as np
 import torch
-
-from torchvision import transforms as T
 from gym.spaces import Box
+from torchvision import transforms as T
 
 
 class ResizeObservation(gym.ObservationWrapper):
