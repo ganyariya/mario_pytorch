@@ -17,10 +17,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from torch.utils.tensorboard import SummaryWriter
-from mario_pytorch.agent.mario import BaseMario
 
 
-def set_logger(save_dir: Path) -> None:
+def _set_logger(save_dir: Path) -> None:
     """Root-Logger を初期化する."""
     logger = getLogger()
     getLogger("matplotlib").setLevel(WARNING)
@@ -40,12 +39,12 @@ def set_logger(save_dir: Path) -> None:
     logger.setLevel(INFO)
 
 
-writer: Final[SummaryWriter] = SummaryWriter()
+_writer: Final[SummaryWriter] = SummaryWriter()
 
 
 class MetricLogger:
     def __init__(self, save_dir: Path) -> None:
-        set_logger(save_dir)
+        _set_logger(save_dir)
 
         self.save_dir: Final[Path] = save_dir
         self.save_metric_log: Final[Path] = save_dir / "metric_log"
@@ -139,11 +138,11 @@ class MetricLogger:
         time_since_last_record = np.round(self.record_time - last_record_time, 3)
 
         # TensorBoard
-        writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
-        writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
-        writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
-        writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
-        writer.add_scalar("Episode/Exploration", epsilon, episode)
+        _writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
+        _writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
+        _writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
+        _writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
+        _writer.add_scalar("Episode/Exploration", epsilon, episode)
 
         self.logger.info(
             f"Episode {episode} - "

@@ -4,7 +4,7 @@ http://kaga100man.com/2019/03/25/post-102/
 https://dajiro.com/entry/2020/06/27/160255
 https://teratail.com/questions/277420
 """
-from typing import Callable, Any
+from typing import Callable
 
 import torch
 from torch.nn import Module
