@@ -3,10 +3,10 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 """
 
 import datetime
-import yaml
-
-from pathlib import Path
 from os import path
+from pathlib import Path
+
+import yaml
 
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger

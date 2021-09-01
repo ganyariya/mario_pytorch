@@ -1,21 +1,12 @@
-import time
 import datetime
-
-from typing import List, Final
+import time
+from logging import (INFO, WARNING, FileHandler, Formatter, Logger,
+                     StreamHandler, getLogger)
 from pathlib import Path
-from logging import (
-    getLogger,
-    Formatter,
-    StreamHandler,
-    FileHandler,
-    Logger,
-    INFO,
-    WARNING,
-)
+from typing import Final, List
 
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
 

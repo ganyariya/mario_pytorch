@@ -1,17 +1,12 @@
 import gym
 import gym_super_mario_bros
-
-from nes_py.wrappers import JoypadSpace
 from gym.wrappers import FrameStack
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+from nes_py.wrappers import JoypadSpace
 
 from mario_pytorch.util.config import Config
-from mario_pytorch.wrappers import (
-    SkipFrame,
-    GrayScaleObservation,
-    ResizeObservation,
-    CustomRewardEnv,
-)
+from mario_pytorch.wrappers import (CustomRewardEnv, GrayScaleObservation,
+                                    ResizeObservation, SkipFrame)
 
 
 def _get_env_name(world: int, stage: int, version: int) -> str:

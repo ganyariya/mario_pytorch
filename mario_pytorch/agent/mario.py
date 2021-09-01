@@ -1,18 +1,15 @@
 import random
-
-from typing import Tuple, Optional
-from pathlib import Path
-from collections import deque
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from copy import deepcopy
 from logging import getLogger
+from pathlib import Path
+from typing import Optional, Tuple
 
-import torch
 import numpy as np
-
+import torch
 from gym.wrappers.frame_stack import LazyFrames
-from mario_pytorch.agent.mario_net import MarioNet
 
+from mario_pytorch.agent.mario_net import MarioNet
 
 REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
 logger = getLogger(__name__)
