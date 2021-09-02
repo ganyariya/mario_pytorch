@@ -14,6 +14,8 @@ from mario_pytorch.wrappers import (
 
 
 def _get_env_name(world: int, stage: int, version: int) -> str:
+    if world == -1 and stage == -1:
+        return f"SuperMarioBros-v{version}"
     return f"SuperMarioBros-{world}-{stage}-v{version}"
 
 
