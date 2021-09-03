@@ -8,13 +8,13 @@ from pathlib import Path
 import torch
 
 from mario_pytorch.agent.mario import LearnedMario
-from mario_pytorch.util.config import Config
+from mario_pytorch.util.config import EnvConfig
 from mario_pytorch.util.get_env import get_env
 
 # ----------------------------------------------------------------------
 
 config_path = Path(__file__).parents[1] / "config" / "base.yaml"
-config = Config.create(str(config_path))
+config = EnvConfig.create(str(config_path))
 
 checkpoint_name = "2021-08-29T15-32-18"
 checkpoint = Path(__file__).parents[1] / "checkpoints" / checkpoint_name

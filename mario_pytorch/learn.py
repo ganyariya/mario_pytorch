@@ -10,14 +10,17 @@ import yaml
 
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
-from mario_pytorch.util.config import Config
+from mario_pytorch.util.config import EnvConfig, RewardConfig
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 
 # ----------------------------------------------------------------------
 
-config_path = Path(__file__).parents[1] / "config" / "base.yaml"
-config = Config.create(str(config_path))
+config_path = Path(__file__).parents[1] / "config" / "env" / "base.yaml"
+config = EnvConfig.create(str(config_path))
+
+reward_config_path = Path(__file__).parents[1] / "config" / "reward" / "base.yaml"
+reward_config = RewardConfig.create(str(reward_config_path))
 
 save_dir = (
     Path(path.dirname(__file__)).parent

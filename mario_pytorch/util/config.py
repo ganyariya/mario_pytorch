@@ -4,9 +4,7 @@ import yaml
 from pydantic import BaseModel
 
 
-class Config(BaseModel):
-    """Config"""
-
+class EnvConfig(BaseModel):
     WORLD: int
     STAGE: int
     VERSION: int
@@ -23,6 +21,27 @@ class Config(BaseModel):
     INTENTION: str
 
     @staticmethod
-    def create(path: str) -> Config:
+    def create(path: str) -> EnvConfig:
         with open(path, "r") as f:
-            return Config(**yaml.safe_load(f))
+            return EnvConfig(**yaml.safe_load(f))
+
+
+class Scope(BaseModel):
+    MIN: int
+    MAX: int
+
+
+class RewardConfig(BaseModel):
+    POSITION: Scope
+    ENEMY: Scope
+    COIN: Scope
+    GOAL: Scope
+    LIFE: Scope
+    ITEM: Scope
+    TIME: Scope
+    SCORE: Scope
+
+    @staticmethod
+    def create(path: str) -> EnvConfig:
+        with open(path, "r") as f:
+            return RewardConfig(**yaml.safe_load(f))
