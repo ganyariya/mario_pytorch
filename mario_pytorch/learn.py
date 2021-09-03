@@ -10,17 +10,34 @@ import yaml
 
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
-from mario_pytorch.util.config import EnvConfig, RewardConfig
+from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, RewardConfig
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
+
+
+def tmp_create_reward_config() -> RewardConfig:
+    return RewardConfig(
+        **{
+            "POSITION": -1,
+            "ENEMY": -1,
+            "COIN": -1,
+            "GOAL": -1,
+            "LIFE": -1,
+            "ITEM": -1,
+            "TIME": -1,
+            "SCORE": -1,
+        }
+    )
+
 
 # ----------------------------------------------------------------------
 
 config_path = Path(__file__).parents[1] / "config" / "env" / "base.yaml"
 config = EnvConfig.create(str(config_path))
 
-reward_config_path = Path(__file__).parents[1] / "config" / "reward" / "base.yaml"
-reward_config = RewardConfig.create(str(reward_config_path))
+reward_scope_config_path = Path(__file__).parents[1] / "config" / "reward" / "base.yaml"
+reward_scope_config = RewardScopeConfig.create(str(reward_scope_config_path))
+reward_config = tmp_create_reward_config()
 
 save_dir = (
     Path(path.dirname(__file__)).parent
@@ -31,7 +48,7 @@ save_dir.mkdir(parents=True)
 with open(save_dir / "used_config.yaml", "w") as f:
     yaml.safe_dump(config.dict(), f, encoding="utf-8", allow_unicode=True)
 
-env = get_env(config)
+env = get_env(config, reward_config)
 
 logger = MetricLogger(save_dir)
 mario = Mario(

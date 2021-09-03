@@ -32,6 +32,17 @@ class Scope(BaseModel):
 
 
 class RewardConfig(BaseModel):
+    POSITION: int
+    ENEMY: int
+    COIN: int
+    GOAL: int
+    LIFE: int
+    ITEM: int
+    TIME: int
+    SCORE: int
+
+
+class RewardScopeConfig(BaseModel):
     POSITION: Scope
     ENEMY: Scope
     COIN: Scope
@@ -44,4 +55,4 @@ class RewardConfig(BaseModel):
     @staticmethod
     def create(path: str) -> EnvConfig:
         with open(path, "r") as f:
-            return RewardConfig(**yaml.safe_load(f))
+            return RewardScopeConfig(**yaml.safe_load(f))
