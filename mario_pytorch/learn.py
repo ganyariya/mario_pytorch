@@ -36,7 +36,7 @@ config_path = Path(__file__).parents[1] / "config" / "env" / "base.yaml"
 config = EnvConfig.create(str(config_path))
 
 # reward_scope_config_path = Path(__file__).parents[1] / "config" / "reward" / "base.yaml"
-# treward_scope_config = RewardScopeConfig.create(str(reward_scope_config_path))
+# reward_scope_config = RewardScopeConfig.create(str(reward_scope_config_path))
 reward_config = tmp_create_reward_config()
 
 save_dir = (
