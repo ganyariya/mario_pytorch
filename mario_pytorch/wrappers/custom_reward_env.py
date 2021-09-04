@@ -66,7 +66,15 @@ class CustomRewardEnv(gym.Wrapper):
         reward_item = self.__process_reward_item(info)
         reward_time = self.__process_reward_time(info)
         reward_score = self.__process_reward_score(info)
-        custom_reward = reward_x + reward_coin + reward_life + reward_goal + reward_item + reward_time + reward_score
+        custom_reward = (
+            reward_x
+            + reward_coin
+            + reward_life
+            + reward_goal
+            + reward_item
+            + reward_time
+            + reward_score
+        )
 
         return state, custom_reward, done, info
 
@@ -102,7 +110,8 @@ class CustomRewardEnv(gym.Wrapper):
 
     def __process_reward_life(self, info: Dict) -> int:
         l = info["life"].item()
-        if l == 255: l = -1
+        if l == 255:
+            l = -1
         w = self.__reward_config.LIFE
         ret = (self.__prev_life - l) * w
         self.__prev_life = l
