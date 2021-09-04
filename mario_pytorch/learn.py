@@ -3,6 +3,7 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 """
 
 import datetime
+import time
 from os import path
 from pathlib import Path
 
@@ -18,11 +19,11 @@ from mario_pytorch.util.get_env import get_env
 def tmp_create_reward_config() -> RewardConfig:
     return RewardConfig(
         **{
-            "POSITION": -1,
+            "POSITION": 1,
             "ENEMY": -1,
-            "COIN": -1,
+            "COIN": 2,
             "GOAL": -1,
-            "LIFE": -1,
+            "LIFE": -3,
             "ITEM": -1,
             "TIME": -1,
             "SCORE": -1,
@@ -75,6 +76,9 @@ for e in range(config.EPISODES):
         q, loss = mario.learn()
 
         logger.log_step(reward, loss, q)
+
+        # time.sleep(0.05)
+        # print(info["x_pos"])
 
         state = next_state
 

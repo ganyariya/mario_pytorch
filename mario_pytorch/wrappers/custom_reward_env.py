@@ -1,16 +1,18 @@
 from typing import Tuple, Dict, Final, Literal
+from logging import getLogger
 
 import gym
 import numpy as np
 
 from mario_pytorch.util.config import RewardConfig
 
-STATUS_LITERAL = Literal("small", "tall", "fireball")
-STATUS_TO_INT: Final[Dict[STATUS_LITERAL, int]] = {
+STATUS_TO_INT: Final[Dict[str, int]] = {
     "small": 0,
     "tall": 1,
     "fireball": 2,
 }
+logger = getLogger(__name__)
+
 
 # https://zakopilo.hatenablog.jp/entry/2021/01/30/214806
 class CustomRewardEnv(gym.Wrapper):
@@ -34,13 +36,19 @@ class CustomRewardEnv(gym.Wrapper):
 
         self.__prev_x = 0
         self.__prev_coin = 0
-        self.__prev_life = 0
+        self.__prev_life = 2
         self.__prev_time = 0
         self.__prev_score = 0
         self.__prev_status = STATUS_TO_INT["small"]
 
     def reset(self, **kwargs) -> np.ndarray:
         self.__prev_state = self.env.reset(**kwargs)
+        self.__prev_x = 0
+        self.__prev_coin = 0
+        self.__prev_life = 2
+        self.__prev_time = 0
+        self.__prev_score = 0
+        self.__prev_status = STATUS_TO_INT["small"]
         return self.__prev_state
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
@@ -49,6 +57,7 @@ class CustomRewardEnv(gym.Wrapper):
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
 
+        self.__reset_on_each_life(info)
         reward_x = self.__process_reward_x(info)
         reward_coin = self.__process_reward_coin(info)
         reward_life = self.__process_reward_life(info)
@@ -56,11 +65,19 @@ class CustomRewardEnv(gym.Wrapper):
         reward_item = self.__process_reward_item(info)
         reward_time = self.__process_reward_time(info)
         reward_score = self.__process_reward_score(info)
+        # logger.info(f"x: {reward_x} coin: {reward_coin} life: {reward_life}")
 
         return state, reward, done, info
 
+    def __reset_on_each_life(self, info: Dict) -> None:
+        l = info["life"].item()
+        if self.__prev_life - l > 0:
+            self.__prev_x = info["x_pos"].item()
+            self.__prev_status = STATUS_TO_INT["small"]
+            self.__prev_time = info["time"]
+
     def __process_reward_x(self, info: Dict) -> int:
-        x = info["x_pos"]
+        x = info["x_pos"].item()
         w = self.__reward_config.POSITION
         ret = (x - self.__prev_x) * w
         self.__prev_x = x
@@ -77,9 +94,10 @@ class CustomRewardEnv(gym.Wrapper):
         return ret
 
     def __process_reward_life(self, info: Dict) -> int:
-        l = info["life"]
+        l = info["life"].item()
+        if l == 255: l = -1
         w = self.__reward_config.LIFE
-        ret = (l - self.__prev_life) * w
+        ret = (self.__prev_life - l) * w
         self.__prev_life = l
         return ret
 
