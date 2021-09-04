@@ -42,11 +42,14 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_status = STATUS_TO_INT["small"]
 
     def reset(self, **kwargs) -> np.ndarray:
+        self.env.reset(**kwargs)
+        _, _, _, info = self.env.step(0)
+
         self.__prev_state = self.env.reset(**kwargs)
         self.pprev_x = 0
         self.pprev_coin = 0
         self.pprev_life = 2
-        self.pprev_time = 0
+        self.pprev_time = info["time"]
         self.pprev_score = 0
         self.pprev_status = STATUS_TO_INT["small"]
         return self.__prev_state
