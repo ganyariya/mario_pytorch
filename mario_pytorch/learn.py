@@ -19,14 +19,14 @@ from mario_pytorch.util.get_env import get_env
 def tmp_create_reward_config() -> RewardConfig:
     return RewardConfig(
         **{
-            "POSITION": 1,
-            "ENEMY": -1,
-            "COIN": 2,
-            "GOAL": -1,
-            "LIFE": -3,
-            "ITEM": -1,
-            "TIME": -1,
-            "SCORE": -1,
+            "POSITION": 0,
+            "ENEMY": 0,
+            "COIN": 0,
+            "GOAL": 0,
+            "LIFE": 0,
+            "ITEM": 0,
+            "TIME": 0,
+            "SCORE": 100,
         }
     )
 
@@ -76,9 +76,6 @@ for e in range(config.EPISODES):
         q, loss = mario.learn()
 
         logger.log_step(reward, loss, q)
-
-        # time.sleep(0.05)
-        # print(info["x_pos"])
 
         state = next_state
 

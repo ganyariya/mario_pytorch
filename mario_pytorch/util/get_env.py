@@ -20,6 +20,16 @@ def _get_env_name(world: int, stage: int, version: int) -> str:
 
 
 def get_env(config: EnvConfig, reward_config: RewardConfig) -> gym.Env:
+    """
+
+    Notes
+    -----
+    env.step を 利用側ですると，FrameStack -> ResizeObservation ... -> CustomRewardEnv
+    のような順番で呼び出される
+
+    ただし self.env.step(action) で呼び出されるので，結局実行される順番は後がけであるため
+    Joypad -> Custom -> SkipFrame -> ... -> FrameStack となる
+    """
     # 4 Consecutive GrayScale Frames Set [4, 84, 84]
     env = gym_super_mario_bros.make(
         _get_env_name(config.WORLD, config.STAGE, config.VERSION)

@@ -58,6 +58,7 @@ class CustomRewardEnv(gym.Wrapper):
         state, reward, done, info = self.env.step(action)
 
         self.__reset_on_each_life(info)
+
         reward_x = self.__process_reward_x(info)
         reward_coin = self.__process_reward_coin(info)
         reward_life = self.__process_reward_life(info)
@@ -65,11 +66,17 @@ class CustomRewardEnv(gym.Wrapper):
         reward_item = self.__process_reward_item(info)
         reward_time = self.__process_reward_time(info)
         reward_score = self.__process_reward_score(info)
-        # logger.info(f"x: {reward_x} coin: {reward_coin} life: {reward_life}")
+        custom_reward = reward_x + reward_coin + reward_life + reward_goal + reward_item + reward_time + reward_score
 
-        return state, reward, done, info
+        return state, custom_reward, done, info
 
     def __reset_on_each_life(self, info: Dict) -> None:
+        """ライフが減少したときの reset 処理.
+
+        Notes
+        -----
+        バグっている可能性は高い
+        """
         l = info["life"].item()
         if self.__prev_life - l > 0:
             self.__prev_x = info["x_pos"].item()
