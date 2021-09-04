@@ -34,21 +34,21 @@ class CustomRewardEnv(gym.Wrapper):
         self.__reward_config = reward_config
         self.__prev_state = env.reset()
 
-        self.__prev_x = 0
-        self.__prev_coin = 0
-        self.__prev_life = 2
-        self.__prev_time = 0
-        self.__prev_score = 0
-        self.__prev_status = STATUS_TO_INT["small"]
+        self.pprev_x = 0
+        self.pprev_coin = 0
+        self.pprev_life = 2
+        self.pprev_time = 0
+        self.pprev_score = 0
+        self.pprev_status = STATUS_TO_INT["small"]
 
     def reset(self, **kwargs) -> np.ndarray:
         self.__prev_state = self.env.reset(**kwargs)
-        self.__prev_x = 0
-        self.__prev_coin = 0
-        self.__prev_life = 2
-        self.__prev_time = 0
-        self.__prev_score = 0
-        self.__prev_status = STATUS_TO_INT["small"]
+        self.pprev_x = 0
+        self.pprev_coin = 0
+        self.pprev_life = 2
+        self.pprev_time = 0
+        self.pprev_score = 0
+        self.pprev_status = STATUS_TO_INT["small"]
         return self.__prev_state
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
@@ -57,15 +57,15 @@ class CustomRewardEnv(gym.Wrapper):
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
 
-        self._reset_on_each_life(info)
+        self.reset_on_each_life(info)
 
-        reward_x = self._process_reward_x(info)
-        reward_coin = self._process_reward_coin(info)
-        reward_life = self._process_reward_life(info)
-        reward_goal = self._process_reward_goal(info)
-        reward_item = self._process_reward_item(info)
-        reward_time = self._process_reward_time(info)
-        reward_score = self._process_reward_score(info)
+        reward_x = self.process_reward_x(info)
+        reward_coin = self.process_reward_coin(info)
+        reward_life = self.process_reward_life(info)
+        reward_goal = self.process_reward_goal(info)
+        reward_item = self.process_reward_item(info)
+        reward_time = self.process_reward_time(info)
+        reward_score = self.process_reward_score(info)
         custom_reward = (
             reward_x
             + reward_coin
@@ -78,7 +78,7 @@ class CustomRewardEnv(gym.Wrapper):
 
         return state, custom_reward, done, info
 
-    def _reset_on_each_life(self, info: Dict) -> None:
+    def reset_on_each_life(self, info: Dict) -> None:
         """ライフが減少したときの reset 処理.
 
         Notes
@@ -86,62 +86,62 @@ class CustomRewardEnv(gym.Wrapper):
         バグっている可能性は高い
         """
         l = info["life"].item()
-        if self.__prev_life - l > 0:
-            self.__prev_x = info["x_pos"].item()
-            self.__prev_status = STATUS_TO_INT["small"]
-            self.__prev_time = info["time"]
+        if self.pprev_life - l > 0:
+            self.pprev_x = info["x_pos"].item()
+            self.pprev_status = STATUS_TO_INT["small"]
+            self.pprev_time = info["time"]
 
-    def _process_reward_x(self, info: Dict) -> int:
+    def process_reward_x(self, info: Dict) -> int:
         x = info["x_pos"].item()
         w = self.__reward_config.POSITION
-        ret = (x - self.__prev_x) * w
-        self.__prev_x = x
+        ret = (x - self.pprev_x) * w
+        self.pprev_x = x
         return ret
 
-    def _process_reward_coin(self, info: Dict) -> int:
+    def process_reward_coin(self, info: Dict) -> int:
         c = info["coins"]
         w = self.__reward_config.COIN
-        if self.__prev_coin <= c:
-            ret = (c - self.__prev_coin) * w
+        if self.pprev_coin <= c:
+            ret = (c - self.pprev_coin) * w
         else:
-            ret = ((100 + c) - self.__prev_coin) * w
-        self.__prev_coin = c
+            ret = ((100 + c) - self.pprev_coin) * w
+        self.pprev_coin = c
         return ret
 
-    def _process_reward_life(self, info: Dict) -> int:
+    def process_reward_life(self, info: Dict) -> int:
         l = info["life"].item()
         if l == 255:
             l = -1
         w = self.__reward_config.LIFE
-        ret = (self.__prev_life - l) * w
-        self.__prev_life = l
+        ret = (self.pprev_life - l) * w
+        self.pprev_life = l
         return ret
 
-    def _process_reward_goal(self, info: Dict) -> int:
+    def process_reward_goal(self, info: Dict) -> int:
         f = int(info["flag_get"])
         w = self.__reward_config.GOAL
         ret = f * w
         return ret
 
-    def _process_reward_item(self, info: Dict) -> int:
+    def process_reward_item(self, info: Dict) -> int:
         s = STATUS_TO_INT[info["status"]]
         w = self.__reward_config.ITEM
-        d = max(0, (s - self.__prev_status))
+        d = max(0, (s - self.pprev_status))
         ret = d * w
-        self.__prev_status = s
+        self.pprev_status = s
         return ret
 
-    def _process_reward_time(self, info: Dict) -> int:
+    def process_reward_time(self, info: Dict) -> int:
         t = info["time"]
         w = self.__reward_config.TIME
-        d = max(0, self.__prev_time - t)
+        d = max(0, self.pprev_time - t)
         ret = d * w
-        self.__prev_time = t
+        self.pprev_time = t
         return ret
 
-    def _process_reward_score(self, info: Dict) -> int:
+    def process_reward_score(self, info: Dict) -> int:
         s = info["score"]
         w = self.__reward_config.SCORE
-        ret = (s - self.__prev_score) * w
-        self.__prev_score = s
+        ret = (s - self.pprev_score) * w
+        self.pprev_score = s
         return ret
