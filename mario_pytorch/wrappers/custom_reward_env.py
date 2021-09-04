@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Final, Literal
+from typing import Tuple, Dict, Final
 from logging import getLogger
 
 import gym
@@ -46,7 +46,7 @@ class CustomRewardEnv(gym.Wrapper):
         _, _, _, info = self.env.step(0)
 
         self.__prev_state = self.env.reset(**kwargs)
-        self.pprev_x = 0
+        self.pprev_x = info["x_pos"]
         self.pprev_coin = 0
         self.pprev_life = 2
         self.pprev_time = info["time"]
@@ -56,6 +56,7 @@ class CustomRewardEnv(gym.Wrapper):
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
         self.__reward_config = reward_config
+        logger.info(f"[CHANGED] {reward_config}")
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
