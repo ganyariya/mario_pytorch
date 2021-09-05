@@ -81,7 +81,3 @@ def play(
                 break
 
         print(reward_sum)
-
-
-if __name__ == "__main__":
-    play("base.yaml", "reward_scope", "2021-08-29T15-32-18", 10)
