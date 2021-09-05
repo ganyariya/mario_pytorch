@@ -24,13 +24,13 @@ def tmp_create_reward_config() -> RewardConfig:
     return RewardConfig(
         **{
             "POSITION": 1,
-            "ENEMY": 1,
-            "COIN": 1,
-            "GOAL": 1,
-            "LIFE": 1,
-            "ITEM": 1,
-            "TIME": 1,
-            "SCORE": 1,
+            "ENEMY": 50,
+            "COIN": 30,
+            "GOAL": 500,
+            "LIFE": -200,
+            "ITEM": 200,
+            "TIME": -1,
+            "SCORE": 0,
         }
     )
 

@@ -2,6 +2,8 @@
 https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 """
 
+import time
+
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
 from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, RewardConfig
@@ -21,13 +23,13 @@ def tmp_create_reward_config() -> RewardConfig:
     return RewardConfig(
         **{
             "POSITION": 1,
-            "ENEMY": 1,
-            "COIN": 1,
-            "GOAL": 1,
-            "LIFE": 1,
-            "ITEM": 1,
-            "TIME": 1,
-            "SCORE": 1,
+            "ENEMY": 50,
+            "COIN": 30,
+            "GOAL": 500,
+            "LIFE": -200,
+            "ITEM": 200,
+            "TIME": -1,
+            "SCORE": 0,
         }
     )
 
@@ -72,6 +74,9 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
             q, loss = mario.learn()
 
             logger.log_step(reward, loss, q)
+
+            time.sleep(0.1)
+            print(reward, info)
 
             state = next_state
 
