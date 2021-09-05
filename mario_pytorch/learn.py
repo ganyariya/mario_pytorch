@@ -75,9 +75,6 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
 
             logger.log_step(reward, loss, q)
 
-            time.sleep(0.1)
-            print(reward, info)
-
             state = next_state
 
             if done or info["flag_get"]:
