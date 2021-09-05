@@ -805,7 +805,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "28c75817a0bb02a877a72c85825233fb738731cc7334cc1c69be27606038b98f"
+content-hash = "a93b918dc47e9e937f9e4a85a1d86e8827747d13296cba1e5a93396436f99108"
 
 [metadata.files]
 absl-py = [
