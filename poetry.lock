@@ -235,15 +235,20 @@ robotics = ["mujoco_py (>=1.50,<2.0)", "imageio"]
 toy_text = ["scipy"]
 
 [[package]]
-name = "gym-super-mario-bros"
+name = "gym_super_mario_bros"
 version = "7.3.2"
-description = "Super Mario Bros. for OpenAI Gym"
+description = ""
 category = "main"
 optional = false
 python-versions = "*"
+develop = false
 
 [package.dependencies]
-nes-py = ">=8.1.2"
+nes-py = ">=8.1.4"
+
+[package.source]
+type = "directory"
+url = "../gym-super-mario-bros"
 
 [[package]]
 name = "idna"
@@ -800,7 +805,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "1337efb58120cf2d431b73049fa9224c1c5bd4cef1c96accd80748873da9c63e"
+content-hash = "a93b918dc47e9e937f9e4a85a1d86e8827747d13296cba1e5a93396436f99108"
 
 [metadata.files]
 absl-py = [
@@ -942,10 +947,7 @@ grpcio = [
 gym = [
     {file = "gym-0.19.0.tar.gz", hash = "sha256:940069b983806e1ccc400fa6d47b4e34e462accf6a4fb0acb0a5e509ad0f502d"},
 ]
-gym-super-mario-bros = [
-    {file = "gym_super_mario_bros-7.3.2-py2.py3-none-any.whl", hash = "sha256:82d360493288888dd395dc14f88685ec56d73c0deba16bd446baecaf92b8f870"},
-    {file = "gym_super_mario_bros-7.3.2.tar.gz", hash = "sha256:a26561cdf17f251d30b1a65776bd3f41555429f4dfc81969d8f63b6c996fab22"},
-]
+gym_super_mario_bros = []
 idna = [
     {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},
     {file = "idna-3.2.tar.gz", hash = "sha256:467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3"},

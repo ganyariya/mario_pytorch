@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Final, Literal
+from typing import Tuple, Dict, Final
 from logging import getLogger
 
 import gym
@@ -39,6 +39,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_life = 2
         self.pprev_time = 0
         self.pprev_score = 0
+        self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
 
     def reset(self, **kwargs) -> np.ndarray:
@@ -46,16 +47,18 @@ class CustomRewardEnv(gym.Wrapper):
         _, _, _, info = self.env.step(0)
 
         self.__prev_state = self.env.reset(**kwargs)
-        self.pprev_x = 0
+        self.pprev_x = info["x_pos"]
         self.pprev_coin = 0
         self.pprev_life = 2
         self.pprev_time = info["time"]
         self.pprev_score = 0
+        self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
         return self.__prev_state
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
         self.__reward_config = reward_config
+        logger.info(f"[CHANGED] {reward_config}")
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
@@ -69,6 +72,7 @@ class CustomRewardEnv(gym.Wrapper):
         reward_item = self.process_reward_item(info)
         reward_time = self.process_reward_time(info)
         reward_score = self.process_reward_score(info)
+        reward_kills = self.process_reward_kills(info)
         custom_reward = (
             reward_x
             + reward_coin
@@ -77,6 +81,7 @@ class CustomRewardEnv(gym.Wrapper):
             + reward_item
             + reward_time
             + reward_score
+            + reward_kills
         )
 
         return state, custom_reward, done, info
@@ -147,4 +152,11 @@ class CustomRewardEnv(gym.Wrapper):
         w = self.__reward_config.SCORE
         ret = (s - self.pprev_score) * w
         self.pprev_score = s
+        return ret
+
+    def process_reward_kills(self, info: Dict) -> int:
+        k = info["kills"]
+        w = self.__reward_config.ENEMY
+        ret = (k - self.pprev_kills) * w
+        self.pprev_kills = k
         return ret
