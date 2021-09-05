@@ -14,6 +14,7 @@ from mario_pytorch.util.process_path import (
     get_date_path,
     get_env_config_path,
     get_results_path,
+    get_checkpoint_path,
     get_date_path,
     get_model_path,
 )
@@ -49,7 +50,8 @@ def play(
 
     results_path = get_results_path()
     date_path = get_date_path(results_path, date_str)
-    model_path = get_model_path(date_path, checkpoint_idx)
+    checkpoint_path = get_checkpoint_path(date_path)
+    model_path = get_model_path(checkpoint_path, checkpoint_idx)
     model = torch.load(model_path)["model"]
 
     env = get_env(env_config, reward_config)
