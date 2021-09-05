@@ -9,6 +9,13 @@ def test_reward_x(make_env: CustomRewardEnv):
     assert make_env.pprev_x == 10
 
 
+def test_reward_kills(make_env: CustomRewardEnv):
+    info = {"kills": 10}
+    reward = make_env.process_reward_kills(info)
+    assert reward == 10
+    assert make_env.pprev_kills == 10
+
+
 def test_reward_coin_normal(make_env: CustomRewardEnv):
     info = {"coins": 10}
     reward = make_env.process_reward_coin(info)
