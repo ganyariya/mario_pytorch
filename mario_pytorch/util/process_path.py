@@ -26,6 +26,12 @@ def get_save_path(results_path: Path) -> Path:
     return save_path
 
 
+def get_checkpoint_path(save_path: Path) -> Path:
+    checkpoint_path = save_path / "checkpoints"
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
+    return checkpoint_path
+
+
 def copy_and_save_env_files(
     save_path: Path, env_config: EnvConfig, reward_config: RewardConfig
 ) -> None:

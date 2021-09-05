@@ -9,9 +9,9 @@ from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (
     get_env_config_path,
-    get_reward_scope_config_path,
     get_results_path,
     get_save_path,
+    get_checkpoint_path,
     copy_and_save_env_files,
 )
 
@@ -41,6 +41,7 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
 
     results_path = get_results_path()
     save_path = get_save_path(results_path)
+    checkpoint_path = get_checkpoint_path(save_path)
     copy_and_save_env_files(save_path, env_config, reward_config)
 
     env = get_env(env_config, reward_config)
@@ -48,7 +49,7 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
     mario = Mario(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
         action_dim=env.action_space.n,
-        save_path=save_path,
+        checkpoint_path=checkpoint_path,
     )
     export_onnx(mario.online_net, env.reset(), transform_mario_input, save_path)
 
