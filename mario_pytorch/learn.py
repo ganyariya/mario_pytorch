@@ -12,6 +12,7 @@ from mario_pytorch.util.process_path import (
     get_results_path,
     get_save_path,
     get_checkpoint_path,
+    generate_README_file,
     copy_and_save_env_files,
 )
 
@@ -43,6 +44,7 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
     save_path = get_save_path(results_path)
     checkpoint_path = get_checkpoint_path(save_path)
     copy_and_save_env_files(save_path, env_config, reward_config)
+    generate_README_file(save_path)
 
     env = get_env(env_config, reward_config)
     logger = MetricLogger(save_path)

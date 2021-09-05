@@ -41,6 +41,11 @@ def copy_and_save_env_files(
         yaml.safe_dump(reward_config.dict(), f, encoding="utf-8", allow_unicode=True)
 
 
+def generate_README_file(save_path: Path) -> None:
+    with open(save_path / "README.md", "w") as f:
+        f.write("# Why")
+
+
 def get_date_path(results_path: Path, date_str: str) -> Path:
     return results_path / date_str
 
