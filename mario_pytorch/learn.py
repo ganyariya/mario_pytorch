@@ -75,9 +75,6 @@ for e in range(config.EPISODES):
         mario.cache(state, next_state, action, reward, done)
         q, loss = mario.learn()
 
-        print(reward)
-        time.sleep(0.1)
-
         logger.log_step(reward, loss, q)
 
         state = next_state
