@@ -1,0 +1,24 @@
+POSITION:
+  MIN: -1
+  MAX: 1
+ENEMY:
+  MIN: -1
+  MAX: 1
+COIN:
+  MIN: -1
+  MAX: 1
+GOAL:
+  MIN: -1
+  MAX: 1
+LIFE:
+  MIN: -1
+  MAX: 1
+ITEM:
+  MIN: -1
+  MAX: 1
+TIME:
+  MIN: -1
+  MAX: 1
+SCORE:
+  MIN: -1
+  MAX: 1

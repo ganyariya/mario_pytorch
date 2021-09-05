@@ -2,6 +2,10 @@
     "python.formatting.provider": "black",
     "files.exclude": {
         "**/__pycache__": true,
-        "**/__init__.pyc": true
+        "**/__init__.pyc": true,
+        "**/runs": true,
+        "**/.pytest_cache": true,
+        "**/.idea": true,
+        "**/.venv": true,
     }
 }

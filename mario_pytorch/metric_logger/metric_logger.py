@@ -1,7 +1,14 @@
 import datetime
 import time
-from logging import (INFO, WARNING, FileHandler, Formatter, Logger,
-                     StreamHandler, getLogger)
+from logging import (
+    INFO,
+    WARNING,
+    FileHandler,
+    Formatter,
+    Logger,
+    StreamHandler,
+    getLogger,
+)
 from pathlib import Path
 from typing import Final, List
 
@@ -11,7 +18,6 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 def _set_logger(save_dir: Path) -> None:
-    """Root-Logger を初期化する."""
     logger = getLogger()
     getLogger("matplotlib").setLevel(WARNING)
 
@@ -34,19 +40,21 @@ _writer: Final[SummaryWriter] = SummaryWriter()
 
 
 class MetricLogger:
-    def __init__(self, save_dir: Path) -> None:
-        _set_logger(save_dir)
+    def __init__(self, save_path: Path) -> None:
+        _set_logger(save_path)
 
-        self.save_dir: Final[Path] = save_dir
-        self.save_metric_log: Final[Path] = save_dir / "metric_log"
+        self.save_path: Final[Path] = save_path
+        self.image_path: Final[Path] = save_path / "image"
+        self.save_metric_log: Final[Path] = save_path / "metric_log"
         self.logger: Final[Logger] = getLogger(__name__)
         self._init_metric_log_file(self.save_metric_log)
 
         # Images
-        self.ep_rewards_plot = save_dir / "reward_plot.jpg"
-        self.ep_lengths_plot = save_dir / "length_plot.jpg"
-        self.ep_avg_losses_plot = save_dir / "loss_plot.jpg"
-        self.ep_avg_qs_plot = save_dir / "q_plot.jpg"
+        self.image_path.mkdir(parents=True, exist_ok=True)
+        self.ep_rewards_plot = self.image_path / "reward_plot.jpg"
+        self.ep_lengths_plot = self.image_path / "length_plot.jpg"
+        self.ep_avg_losses_plot = self.image_path / "loss_plot.jpg"
+        self.ep_avg_qs_plot = self.image_path / "q_plot.jpg"
 
         # 1エピソードのみ
         self.curr_ep_reward = 0.0

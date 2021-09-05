@@ -39,7 +39,7 @@ class BaseMario:
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
         self.curr_step = 0  # Frame 回数記憶 (エピソードではなく フレーム)
-        self.save_every = 5e5  # 5e5 Frame ごとにモデル保存
+        self.save_every = 1e5  # 1e5 Frame ごとにモデル保存
 
         self.memory = deque(maxlen=100000)
         self.batch_size = 32
@@ -92,10 +92,10 @@ class Mario(BaseMario):
         self,
         state_dim: Tuple[int, int, int],
         action_dim: int,
-        save_dir: Path,
+        checkpoint_path: Path,
     ):
         super().__init__(state_dim, action_dim)
-        self.save_dir = save_dir
+        self.checkpoint_path = checkpoint_path
         self.target_net = deepcopy(self.online_net)
         self._sync_Q_target()
 
@@ -243,7 +243,8 @@ class Mario(BaseMario):
 
     def _save(self) -> None:
         save_path = (
-            self.save_dir / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
+            self.checkpoint_path
+            / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
         )
         torch.save(
             dict(
