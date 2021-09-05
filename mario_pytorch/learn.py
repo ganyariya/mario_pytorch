@@ -35,8 +35,8 @@ def tmp_create_reward_config() -> RewardConfig:
 
 
 def learn(env_config_name: str, reward_scope_config_name: str) -> None:
-    config_path = get_env_config_path(env_config_name)
-    env_config = EnvConfig.create(str(config_path))
+    env_config_path = get_env_config_path(env_config_name)
+    env_config = EnvConfig.create(str(env_config_path))
     reward_config = tmp_create_reward_config()
 
     results_path = get_results_path()

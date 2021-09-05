@@ -33,3 +33,11 @@ def copy_and_save_env_files(
         yaml.safe_dump(env_config.dict(), f, encoding="utf-8", allow_unicode=True)
     with open(save_path / "reward_config.yaml", "w") as f:
         yaml.safe_dump(reward_config.dict(), f, encoding="utf-8", allow_unicode=True)
+
+
+def get_date_path(results_path: Path, date_str: str) -> Path:
+    return results_path / date_str
+
+
+def get_model_path(date_path: Path, checkpoint_idx: int) -> Path:
+    return date_path / f"mario_net_{checkpoint_idx}.chkpt"
