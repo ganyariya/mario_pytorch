@@ -76,8 +76,6 @@ for e in range(config.EPISODES):
         q, loss = mario.learn()
 
         logger.log_step(reward, loss, q)
-        if reward > 0:
-            print(reward)
 
         state = next_state
 
