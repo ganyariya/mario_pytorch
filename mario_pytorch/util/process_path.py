@@ -10,8 +10,8 @@ def get_env_config_path(env_config_name: str) -> Path:
     return Path(__file__).parents[2] / "config" / "env" / env_config_name
 
 
-def get_reward_config_path(reward_config_name: str) -> Path:
-    return Path(__file__).parents[2] / "config" / "reward" / reward_config_name
+def get_reward_scope_config_path(reward_scope_config_name: str) -> Path:
+    return Path(__file__).parents[2] / "config" / "reward" / reward_scope_config_name
 
 
 def get_results_path() -> Path:

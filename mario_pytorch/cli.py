@@ -6,8 +6,8 @@ app: Typer = Typer()
 
 
 @app.command()
-def learn(env_config_name: str, reward_config_name: str):
-    cli_learn(env_config_name, reward_config_name)
+def learn(env_config_name: str, reward_scope_config_name: str):
+    cli_learn(env_config_name, reward_scope_config_name)
 
 
 @app.command()

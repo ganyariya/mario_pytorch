@@ -2,13 +2,6 @@
 https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 """
 
-import datetime
-import time
-from os import path
-from pathlib import Path
-
-import yaml
-
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
 from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, RewardConfig
@@ -16,7 +9,7 @@ from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (
     get_env_config_path,
-    get_reward_config_path,
+    get_reward_scope_config_path,
     get_results_path,
     get_save_path,
     copy_and_save_env_files,
@@ -41,7 +34,7 @@ def tmp_create_reward_config() -> RewardConfig:
 # ----------------------------------------------------------------------
 
 
-def learn(env_config_name: str, reward_config_name: str) -> None:
+def learn(env_config_name: str, reward_scope_config_name: str) -> None:
     config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(config_path))
     reward_config = tmp_create_reward_config()
