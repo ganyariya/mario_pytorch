@@ -12,8 +12,13 @@ def learn(env_config_name: str, reward_scope_config_name: str):
 
 
 @app.command()
-def play(env_config_name: str, date_str: str, checkpoint_idx: int):
-    cli_play(env_config_name, date_str, checkpoint_idx)
+def play(
+    env_config_name: str,
+    reward_scope_config_name: str,
+    date_str: str,
+    checkpoint_idx: int,
+):
+    cli_play(env_config_name, reward_scope_config_name, date_str, checkpoint_idx)
 
 
 if __name__ == "__main__":

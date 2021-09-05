@@ -37,7 +37,12 @@ def tmp_create_reward_config() -> RewardConfig:
 # ----------------------------------------------------------------------
 
 
-def play(env_config_name: str, date_str: str, checkpoint_idx: int) -> None:
+def play(
+    env_config_name: str,
+    reward_scope_config_name: str,
+    date_str: str,
+    checkpoint_idx: int,
+) -> None:
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
     reward_config = tmp_create_reward_config()
@@ -77,4 +82,4 @@ def play(env_config_name: str, date_str: str, checkpoint_idx: int) -> None:
 
 
 if __name__ == "__main__":
-    play("base.yaml", "2021-08-29T15-32-18", 10)
+    play("base.yaml", "reward_scope", "2021-08-29T15-32-18", 10)
