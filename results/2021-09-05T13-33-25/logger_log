@@ -1,0 +1,23 @@
+2021/09/05 13:33:25 - mario_pytorch.agent.mario - INFO
+MarioNet(
+  (image_block): Sequential(
+    (0): Conv2d(4, 32, kernel_size=(8, 8), stride=(4, 4))
+    (1): ReLU()
+    (2): Conv2d(32, 64, kernel_size=(4, 4), stride=(2, 2))
+    (3): ReLU()
+    (4): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1))
+    (5): ReLU()
+    (6): Flatten(start_dim=1, end_dim=-1)
+  )
+  (reward_block): Sequential(
+    (0): Linear(in_features=5, out_features=20, bias=True)
+    (1): ReLU()
+  )
+  (merge_block): Sequential(
+    (0): Linear(in_features=3156, out_features=512, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=512, out_features=7, bias=True)
+  )
+)
+2021/09/05 13:33:29 - mario_pytorch.metric_logger.metric_logger - INFO
+Episode 0 - Step 366 - Epsilon 0.9999085041745478 - Mean Reward 1703.0 - Mean Length 366.0 - Mean Loss 0.0 - Mean Q Value 0.0 - Time Delta 4.356 - 

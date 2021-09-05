@@ -92,10 +92,10 @@ class Mario(BaseMario):
         self,
         state_dim: Tuple[int, int, int],
         action_dim: int,
-        save_dir: Path,
+        save_path: Path,
     ):
         super().__init__(state_dim, action_dim)
-        self.save_dir = save_dir
+        self.save_path = save_path
         self.target_net = deepcopy(self.online_net)
         self._sync_Q_target()
 
@@ -243,7 +243,7 @@ class Mario(BaseMario):
 
     def _save(self) -> None:
         save_path = (
-            self.save_dir / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
+            self.save_path / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
         )
         torch.save(
             dict(
