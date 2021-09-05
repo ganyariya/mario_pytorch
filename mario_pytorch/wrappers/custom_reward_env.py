@@ -39,6 +39,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_life = 2
         self.pprev_time = 0
         self.pprev_score = 0
+        self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
 
     def reset(self, **kwargs) -> np.ndarray:
@@ -51,6 +52,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_life = 2
         self.pprev_time = info["time"]
         self.pprev_score = 0
+        self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
         return self.__prev_state
 
@@ -70,6 +72,7 @@ class CustomRewardEnv(gym.Wrapper):
         reward_item = self.process_reward_item(info)
         reward_time = self.process_reward_time(info)
         reward_score = self.process_reward_score(info)
+        reward_kills = self.process_reward_kills(info)
         custom_reward = (
             reward_x
             + reward_coin
@@ -78,6 +81,7 @@ class CustomRewardEnv(gym.Wrapper):
             + reward_item
             + reward_time
             + reward_score
+            + reward_kills
         )
 
         return state, custom_reward, done, info
@@ -148,4 +152,11 @@ class CustomRewardEnv(gym.Wrapper):
         w = self.__reward_config.SCORE
         ret = (s - self.pprev_score) * w
         self.pprev_score = s
+        return ret
+
+    def process_reward_kills(self, info: Dict) -> int:
+        k = info["kills"]
+        w = self.__reward_config.ENEMY
+        ret = (k - self.pprev_kills) * w
+        self.pprev_kills = k
         return ret
