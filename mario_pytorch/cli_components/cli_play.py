@@ -1,6 +1,12 @@
 from mario_pytorch.play import play
+from mario_pytorch.util.decorators import (
+    argument_print_decorator,
+    time_measurement_decorator,
+)
 
 
+@time_measurement_decorator
+@argument_print_decorator
 def cli_play(
     env_config_name: str,
     reward_scope_config_name: str,

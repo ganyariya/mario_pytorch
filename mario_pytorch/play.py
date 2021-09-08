@@ -2,6 +2,7 @@
 https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 https://github.com/YuansongFeng/MadMario/blob/master/agent.py
 """
+import time
 import torch
 
 from mario_pytorch.agent.mario import LearnedMario
@@ -73,10 +74,9 @@ def play(
 
             next_state, reward, done, info = env.step(action)
             reward_sum += reward
-
             state = next_state
 
-            if done or info["flag_get"]:
+            if done or info["default"]["flag_get"]:
                 break
 
         print(reward_sum)

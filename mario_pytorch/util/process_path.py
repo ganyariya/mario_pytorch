@@ -32,6 +32,12 @@ def get_checkpoint_path(save_path: Path) -> Path:
     return checkpoint_path
 
 
+def get_playlog_path(save_path: Path) -> Path:
+    playlog_path = save_path / "playlogs"
+    playlog_path.mkdir(parents=True, exist_ok=True)
+    return playlog_path
+
+
 def copy_and_save_env_files(
     save_path: Path, env_config: EnvConfig, reward_config: RewardConfig
 ) -> None:

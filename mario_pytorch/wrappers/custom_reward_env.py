@@ -14,6 +14,26 @@ STATUS_TO_INT: Final[Dict[str, int]] = {
 logger = getLogger(__name__)
 
 
+def initPlayLog() -> Dict:
+    return {
+        "x_pos": 0,
+        "x_abs": 0,
+        "x_plus": 0,
+        "x_minus": 0,
+        "coins": 0,
+        "life": 0,
+        "life_plus": 0,
+        "life_minus": 0,
+        "goal": 0,
+        "item": 0,
+        "item_plus": 0,
+        "item_minus": 0,
+        "elapsed": 0,
+        "score": 0,
+        "kills": 0,
+    }
+
+
 # https://zakopilo.hatenablog.jp/entry/2021/01/30/214806
 class CustomRewardEnv(gym.Wrapper):
     """カスタム報酬関数を実装する.
@@ -26,7 +46,6 @@ class CustomRewardEnv(gym.Wrapper):
     Notes
     -----
     - state.shape: (240, 256, 3)
-    - 重複を避けるために `__` とする
     """
 
     def __init__(self, env: gym.Env, reward_config: RewardConfig) -> None:
@@ -41,6 +60,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
+        self.playlog = initPlayLog()
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
@@ -49,11 +69,16 @@ class CustomRewardEnv(gym.Wrapper):
         self.__prev_state = self.env.reset(**kwargs)
         self.pprev_x = info["x_pos"]
         self.pprev_coin = 0
-        self.pprev_life = 2
+        self.pprev_life = info["life"]
         self.pprev_time = info["time"]
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
+
+        self.playlog = initPlayLog()
+        self.playlog["x_pos"] = info["x_pos"]
+        self.playlog["life"] = info["life"]
+
         return self.__prev_state
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
@@ -63,28 +88,32 @@ class CustomRewardEnv(gym.Wrapper):
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
 
+        # マリオが1機失ったらリセット
         self.reset_on_each_life(info)
 
-        reward_x = self.process_reward_x(info)
-        reward_coin = self.process_reward_coin(info)
-        reward_life = self.process_reward_life(info)
-        reward_goal = self.process_reward_goal(info)
-        reward_item = self.process_reward_item(info)
-        reward_time = self.process_reward_time(info)
-        reward_score = self.process_reward_score(info)
-        reward_kills = self.process_reward_kills(info)
-        custom_reward = (
-            reward_x
-            + reward_coin
-            + reward_life
-            + reward_goal
-            + reward_item
-            + reward_time
-            + reward_score
-            + reward_kills
-        )
+        # 差分を計算する
+        diff_info = self.get_diff_info(info)
 
-        return state, custom_reward, done, info
+        # カスタム報酬と内訳を計算する
+        custom_reward, custom_reward_info = self.process_reward(diff_info)
+
+        # 差分用変数を更新する
+        self.update_pprev(info)
+
+        # プレイログを累積する
+        self.accumulate_playlog(info, diff_info)
+
+        return (
+            state,
+            custom_reward,
+            done,
+            {
+                "default": info,
+                "diff_info": diff_info,
+                "custom_reward_info": custom_reward_info,
+                "playlog": self.playlog,
+            },
+        )
 
     def reset_on_each_life(self, info: Dict) -> None:
         """ライフが減少したときの reset 処理.
@@ -99,64 +128,194 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_status = STATUS_TO_INT["small"]
             self.pprev_time = info["time"]
 
-    def process_reward_x(self, info: Dict) -> int:
-        x = info["x_pos"].item()
-        w = self.__reward_config.POSITION
-        ret = (x - self.pprev_x) * w
-        self.pprev_x = x
-        return ret
+    def accumulate_playlog(self, info: Dict, diff_info: Dict) -> None:
+        self.accumulate_x(info, diff_info)
+        self.accumulate_coins(diff_info)
+        self.accumulate_kills(diff_info)
+        self.accumulate_life(diff_info)
+        self.accumulate_goal(diff_info)
+        self.accumulate_item(diff_info)
+        self.accumulate_elapsed(diff_info)
+        self.accumulate_score(diff_info)
 
-    def process_reward_coin(self, info: Dict) -> int:
-        c = info["coins"]
-        w = self.__reward_config.COIN
-        if self.pprev_coin <= c:
-            ret = (c - self.pprev_coin) * w
-        else:
-            ret = ((100 + c) - self.pprev_coin) * w
-        self.pprev_coin = c
-        return ret
+    # *--------------------------------------------*
+    # * accumulate
+    # *--------------------------------------------*
 
-    def process_reward_life(self, info: Dict) -> int:
+    def accumulate_x(self, info: Dict, diff_info: Dict) -> None:
+        self.playlog["x_pos"] = info["x_pos"]
+        self.playlog["x_abs"] += abs(diff_info["x_pos"])
+        if diff_info["x_pos"] > 0:
+            self.playlog["x_plus"] += diff_info["x_pos"]
+        if diff_info["x_pos"] < 0:
+            self.playlog["x_minus"] += diff_info["x_pos"]
+
+    def accumulate_coins(self, diff_info: Dict) -> None:
+        self.playlog["coins"] += diff_info["coins"]
+
+    def accumulate_kills(self, diff_info: Dict) -> None:
+        self.playlog["kills"] += diff_info["kills"]
+
+    def accumulate_life(self, diff_info: Dict) -> None:
+        self.playlog["life"] += diff_info["life"]
+        if diff_info["life"] > 0:
+            self.playlog["life_plus"] += diff_info["life"]
+        if diff_info["life"] < 0:
+            self.playlog["life_minus"] += diff_info["life"]
+
+    def accumulate_goal(self, diff_info: Dict) -> None:
+        self.playlog["goal"] += diff_info["goal"]
+
+    def accumulate_item(self, diff_info: Dict) -> None:
+        self.playlog["item"] += diff_info["item"]
+        if diff_info["item"] > 0:
+            self.playlog["item_plus"] += diff_info["item"]
+        if diff_info["item"] < 0:
+            self.playlog["item_minus"] += diff_info["item"]
+
+    def accumulate_elapsed(self, diff_info: Dict) -> None:
+        self.playlog["elapsed"] += abs(diff_info["elapsed"])
+
+    def accumulate_score(self, diff_info: Dict) -> None:
+        self.playlog["score"] += diff_info["score"]
+
+    # *--------------------------------------------*
+    # * update
+    # *--------------------------------------------*
+
+    def update_pprev(self, info: Dict) -> None:
+        self.update_pprev_x(info)
+        self.update_pprev_coin(info)
+        self.update_pprev_life(info)
+        self.update_pprev_status(info)
+        self.update_pprev_time(info)
+        self.update_pprev_score(info)
+        self.update_pprev_kills(info)
+
+    def update_pprev_x(self, info: Dict) -> None:
+        self.pprev_x = info["x_pos"]
+
+    def update_pprev_coin(self, info: Dict) -> None:
+        self.pprev_coin = info["coins"]
+
+    def update_pprev_life(self, info: Dict) -> None:
         l = info["life"].item()
         if l == 255:
             l = -1
-        w = self.__reward_config.LIFE
-        ret = (self.pprev_life - l) * w
         self.pprev_life = l
+
+    def update_pprev_status(self, info: Dict) -> None:
+        self.pprev_status = STATUS_TO_INT[info["status"]]
+
+    def update_pprev_time(self, info: Dict) -> None:
+        self.pprev_time = info["time"]
+
+    def update_pprev_score(self, info: Dict) -> None:
+        self.pprev_score = info["score"]
+
+    def update_pprev_kills(self, info: Dict) -> None:
+        self.pprev_kills = info["kills"]
+
+    # *--------------------------------------------*
+    # * diff
+    # *--------------------------------------------*
+
+    def get_diff_info(self, info: Dict) -> Dict:
+        """差分を計算する.
+
+        Notes
+        -----
+        now - prev を返す.
+        """
+        return {
+            "x_pos": self.get_diff_x(info),
+            "coins": self.get_diff_coins(info),
+            "life": self.get_diff_life(info),
+            "goal": self.get_diff_goal(info),
+            "item": self.get_diff_item(info),
+            "elapsed": self.get_diff_time(info),
+            "score": self.get_diff_score(info),
+            "kills": self.get_diff_kills(info),
+        }
+
+    def get_diff_x(self, info: Dict) -> int:
+        return info["x_pos"].item() - self.pprev_x
+
+    def get_diff_coins(self, info: Dict) -> int:
+        c = info["coins"]
+        if self.pprev_coin <= c:
+            ret = c - self.pprev_coin
+        else:
+            ret = (100 + c) - self.pprev_coin
         return ret
 
-    def process_reward_goal(self, info: Dict) -> int:
-        f = int(info["flag_get"])
-        w = self.__reward_config.GOAL
-        ret = f * w
-        return ret
+    def get_diff_life(self, info: Dict) -> int:
+        l = info["life"].item()
+        if l == 255:
+            l = -1
+        return l - self.pprev_life
 
-    def process_reward_item(self, info: Dict) -> int:
-        s = STATUS_TO_INT[info["status"]]
-        w = self.__reward_config.ITEM
-        d = max(0, (s - self.pprev_status))
-        ret = d * w
-        self.pprev_status = s
-        return ret
+    def get_diff_goal(self, info: Dict) -> int:
+        return int(info["flag_get"])
 
-    def process_reward_time(self, info: Dict) -> int:
-        t = info["time"]
-        w = self.__reward_config.TIME
-        d = max(0, self.pprev_time - t)
-        ret = d * w
-        self.pprev_time = t
-        return ret
+    def get_diff_item(self, info: Dict) -> int:
+        return STATUS_TO_INT[info["status"]] - self.pprev_status
 
-    def process_reward_score(self, info: Dict) -> int:
-        s = info["score"]
-        w = self.__reward_config.SCORE
-        ret = (s - self.pprev_score) * w
-        self.pprev_score = s
-        return ret
+    def get_diff_time(self, info: Dict) -> int:
+        return abs(info["time"] - self.pprev_time)
 
-    def process_reward_kills(self, info: Dict) -> int:
-        k = info["kills"]
-        w = self.__reward_config.ENEMY
-        ret = (k - self.pprev_kills) * w
-        self.pprev_kills = k
-        return ret
+    def get_diff_score(self, info: Dict) -> int:
+        return info["score"] - self.pprev_score
+
+    def get_diff_kills(self, info: Dict) -> int:
+        return info["kills"] - self.pprev_kills
+
+    # *--------------------------------------------*
+    # * process
+    # *--------------------------------------------*
+
+    def process_reward(self, diff_info: Dict) -> Tuple[int, Dict]:
+        x_pos = self.process_reward_x(diff_info)
+        coins = self.process_reward_coin(diff_info)
+        life = self.process_reward_life(diff_info)
+        goal = self.process_reward_goal(diff_info)
+        item = self.process_reward_item(diff_info)
+        elapsed = self.process_reward_elapsed(diff_info)
+        score = self.process_reward_score(diff_info)
+        kills = self.process_reward_kills(diff_info)
+        reward = x_pos + coins + life + goal + item + elapsed + score + kills
+        reward_dict = {
+            "x_pos": x_pos,
+            "coins": coins,
+            "life": life,
+            "goal": goal,
+            "item": item,
+            "elapsed": elapsed,
+            "score": score,
+            "kills": kills,
+        }
+        return reward, reward_dict
+
+    def process_reward_x(self, diff_info: Dict) -> int:
+        return diff_info["x_pos"] * self.__reward_config.POSITION
+
+    def process_reward_coin(self, diff_info: Dict) -> int:
+        return diff_info["coins"] * self.__reward_config.COIN
+
+    def process_reward_life(self, diff_info: Dict) -> int:
+        return diff_info["life"] * self.__reward_config.LIFE
+
+    def process_reward_goal(self, diff_info: Dict) -> int:
+        return diff_info["goal"] * self.__reward_config.GOAL
+
+    def process_reward_item(self, diff_info: Dict) -> int:
+        return diff_info["item"] * self.__reward_config.ITEM
+
+    def process_reward_elapsed(self, diff_info: Dict) -> int:
+        return diff_info["elapsed"] * self.__reward_config.TIME
+
+    def process_reward_score(self, diff_info: Dict) -> int:
+        return diff_info["score"] * self.__reward_config.SCORE
+
+    def process_reward_kills(self, diff_info: Dict) -> int:
+        return diff_info["kills"] * self.__reward_config.ENEMY
