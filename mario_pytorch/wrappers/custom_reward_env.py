@@ -64,9 +64,12 @@ class CustomRewardEnv(gym.Wrapper):
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
+
+        # マリオが1機失ったらリセット
         self.reset_on_each_life(info)
 
         diff_info = self.get_diff_info(info)
+
         reward_x = self.process_reward_x(diff_info)
         reward_coin = self.process_reward_coin(diff_info)
         reward_life = self.process_reward_life(diff_info)
@@ -101,30 +104,6 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_status = STATUS_TO_INT["small"]
             self.pprev_time = info["time"]
 
-    def process_reward_x(self, diff_info: Dict) -> int:
-        return diff_info["x_pos"] * self.__reward_config.POSITION
-
-    def process_reward_coin(self, diff_info: Dict) -> int:
-        return diff_info["coins"] * self.__reward_config.COIN
-
-    def process_reward_life(self, diff_info: Dict) -> int:
-        return diff_info["life"] * self.__reward_config.LIFE
-
-    def process_reward_goal(self, diff_info: Dict) -> int:
-        return diff_info["goal"] * self.__reward_config.GOAL
-
-    def process_reward_item(self, diff_info: Dict) -> int:
-        return diff_info["item"] * self.__reward_config.ITEM
-
-    def process_reward_time(self, diff_info: Dict) -> int:
-        return diff_info["time"] * self.__reward_config.TIME
-
-    def process_reward_score(self, diff_info: Dict) -> int:
-        return diff_info["score"] * self.__reward_config.SCORE
-
-    def process_reward_kills(self, diff_info: Dict) -> int:
-        return diff_info["kills"] * self.__reward_config.ENEMY
-
     def get_diff_info(self, info: Dict) -> Dict:
         return {
             "x_pos": self.get_diff_x(info),
@@ -136,6 +115,42 @@ class CustomRewardEnv(gym.Wrapper):
             "score": self.get_diff_score(info),
             "kills": self.get_diff_kills(info),
         }
+
+    def update_pprev(self, info: Dict) -> None:
+        self.update_pprev_x(info)
+        self.update_pprev_coin(info)
+        self.update_pprev_life(info)
+        self.update_pprev_status(info)
+        self.update_pprev_time(info)
+        self.update_pprev_score(info)
+        self.update_pprev_kills(info)
+
+    # *--------------------------------------------*
+    # *--------------------------------------------*
+
+    def update_pprev_x(self, info: Dict) -> None:
+        self.pprev_x = info["x_pos"]
+
+    def update_pprev_coin(self, info: Dict) -> None:
+        self.pprev_coin = info["coins"]
+
+    def update_pprev_life(self, info: Dict) -> None:
+        l = info["life"].item()
+        if l == 255:
+            l = -1
+        self.pprev_life = l
+
+    def update_pprev_status(self, info: Dict) -> None:
+        self.pprev_status = STATUS_TO_INT[info["status"]]
+
+    def update_pprev_time(self, info: Dict) -> None:
+        self.pprev_time = info["time"]
+
+    def update_pprev_score(self, info: Dict) -> None:
+        self.pprev_score = info["score"]
+
+    def update_pprev_kills(self, info: Dict) -> None:
+        self.pprev_kills = info["kills"]
 
     def get_diff_x(self, info: Dict) -> int:
         return info["x_pos"].item() - self.pprev_x
@@ -169,6 +184,26 @@ class CustomRewardEnv(gym.Wrapper):
     def get_diff_kills(self, info: Dict) -> int:
         return info["kills"] - self.pprev_kills
 
-    def get_playlog_info(self, info: Dict) -> None:
-        """プレイログ用の log を返す"""
-        pass
+    def process_reward_x(self, diff_info: Dict) -> int:
+        return diff_info["x_pos"] * self.__reward_config.POSITION
+
+    def process_reward_coin(self, diff_info: Dict) -> int:
+        return diff_info["coins"] * self.__reward_config.COIN
+
+    def process_reward_life(self, diff_info: Dict) -> int:
+        return diff_info["life"] * self.__reward_config.LIFE
+
+    def process_reward_goal(self, diff_info: Dict) -> int:
+        return diff_info["goal"] * self.__reward_config.GOAL
+
+    def process_reward_item(self, diff_info: Dict) -> int:
+        return diff_info["item"] * self.__reward_config.ITEM
+
+    def process_reward_time(self, diff_info: Dict) -> int:
+        return diff_info["time"] * self.__reward_config.TIME
+
+    def process_reward_score(self, diff_info: Dict) -> int:
+        return diff_info["score"] * self.__reward_config.SCORE
+
+    def process_reward_kills(self, diff_info: Dict) -> int:
+        return diff_info["kills"] * self.__reward_config.ENEMY
