@@ -2,17 +2,22 @@ import numpy as np
 from mario_pytorch.wrappers.custom_reward_env import CustomRewardEnv
 
 
-def test_reward_x(make_env: CustomRewardEnv):
+def test_x(make_env: CustomRewardEnv):
     info = {"x_pos": np.array(10)}
-    reward = make_env.process_reward_x(info)
+    diff_x = make_env.get_diff_x(info)
+    assert diff_x == 10
+    diff_info = {"x_pos": diff_x}
+    reward = make_env.process_reward_x(diff_info)
     assert reward == 10
 
 
-def test_reward_kills(make_env: CustomRewardEnv):
+def test_kills(make_env: CustomRewardEnv):
     info = {"kills": 10}
-    reward = make_env.process_reward_kills(info)
+    diff_kills = make_env.get_diff_kills(info)
+    assert diff_kills == 10
+    diff_info = {"kills": diff_kills}
+    reward = make_env.process_reward_kills(diff_info)
     assert reward == 10
-    # assert make_env.pprev_kills == 10
 
 
 def test_reward_coin_normal(make_env: CustomRewardEnv):
