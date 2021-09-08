@@ -16,8 +16,8 @@ PyYAML = "^5.4.1"
 stable-baselines3 = {extras = ["extra"], version = "^1.1.0"}
 torchviz = "^0.0.2"
 isort = "^5.9.3"
-gym-super-mario-bros = {path = "../gym-super-mario-bros"}
 typer = "^0.4.0"
+gym-super-mario-bros = {git = "https://github.com/ganyariya/gym-super-mario-bros"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

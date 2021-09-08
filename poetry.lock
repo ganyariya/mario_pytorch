@@ -247,8 +247,10 @@ develop = false
 nes-py = ">=8.1.4"
 
 [package.source]
-type = "directory"
-url = "../gym-super-mario-bros"
+type = "git"
+url = "https://github.com/ganyariya/gym-super-mario-bros"
+reference = "master"
+resolved_reference = "f1157b6fa0181ce3679f283778ad9b74a6619ec0"
 
 [[package]]
 name = "idna"
@@ -333,7 +335,7 @@ python-versions = "*"
 
 [[package]]
 name = "nes-py"
-version = "8.1.7"
+version = "8.1.8"
 description = "An NES Emulator and OpenAI Gym interface"
 category = "main"
 optional = false
@@ -822,7 +824,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "dd4bef671a1aecc4bc7b245333855f1be009e99f72e7645b3ac9b68fd41393d8"
+content-hash = "9583d16d6046de20624b3d51996a94ad68dadf6fa6ef2a4385fe4674de9fbaca"
 
 [metadata.files]
 absl-py = [
@@ -1047,8 +1049,8 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 nes-py = [
-    {file = "nes_py-8.1.7-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:1a726f46442c431b22e63b9bfb48cde51572527c373f5abf4bf45f455510ca0d"},
-    {file = "nes_py-8.1.7.tar.gz", hash = "sha256:f158a4deb4a2baca61355a56b2b3e5f720039cca8b26eed834d9969fd6368c10"},
+    {file = "nes_py-8.1.8-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:2c3183cbb689eb609351dd71bf05a27d0c34d3c65896e453e5b35106ba8cb2d9"},
+    {file = "nes_py-8.1.8.tar.gz", hash = "sha256:8ebfd8d04425d63f953a7c5c6aa70177abdffabea2837a33218498eccd93ebcf"},
 ]
 numpy = [
     {file = "numpy-1.21.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:38e8648f9449a549a7dfe8d8755a5979b45b3538520d1e735637ef28e8c2dc50"},
