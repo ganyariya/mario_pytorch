@@ -69,6 +69,17 @@ def test_reward_life_dec(make_env: CustomRewardEnv):
     assert make_env.pprev_life == 1
 
 
+def test_reward_life_minus(make_env: CustomRewardEnv):
+    info = {"life": np.array(255)}
+    diff_life = make_env.get_diff_life(info)
+    assert diff_life == -3
+    diff_info = {"life": diff_life}
+    reward = make_env.process_reward_life(diff_info)
+    assert reward == -3
+    make_env.update_pprev_life(info)
+    assert make_env.pprev_life == -1
+
+
 def test_reward_not_goal(make_env: CustomRewardEnv):
     info = {"flag_get": 0}
     diff_goal = make_env.get_diff_goal(info)

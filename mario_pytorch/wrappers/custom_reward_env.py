@@ -104,17 +104,9 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_status = STATUS_TO_INT["small"]
             self.pprev_time = info["time"]
 
-    def get_diff_info(self, info: Dict) -> Dict:
-        return {
-            "x_pos": self.get_diff_x(info),
-            "coins": self.get_diff_coins(info),
-            "life": self.get_diff_life(info),
-            "goal": self.get_diff_goal(info),
-            "item": self.get_diff_item(info),
-            "time": self.get_diff_time(info),
-            "score": self.get_diff_score(info),
-            "kills": self.get_diff_kills(info),
-        }
+    # *--------------------------------------------*
+    # * update
+    # *--------------------------------------------*
 
     def update_pprev(self, info: Dict) -> None:
         self.update_pprev_x(info)
@@ -124,9 +116,6 @@ class CustomRewardEnv(gym.Wrapper):
         self.update_pprev_time(info)
         self.update_pprev_score(info)
         self.update_pprev_kills(info)
-
-    # *--------------------------------------------*
-    # *--------------------------------------------*
 
     def update_pprev_x(self, info: Dict) -> None:
         self.pprev_x = info["x_pos"]
@@ -151,6 +140,28 @@ class CustomRewardEnv(gym.Wrapper):
 
     def update_pprev_kills(self, info: Dict) -> None:
         self.pprev_kills = info["kills"]
+
+    # *--------------------------------------------*
+    # * diff
+    # *--------------------------------------------*
+
+    def get_diff_info(self, info: Dict) -> Dict:
+        """差分を計算する.
+
+        Notes
+        -----
+        now - prev を返す.
+        """
+        return {
+            "x_pos": self.get_diff_x(info),
+            "coins": self.get_diff_coins(info),
+            "life": self.get_diff_life(info),
+            "goal": self.get_diff_goal(info),
+            "item": self.get_diff_item(info),
+            "time": self.get_diff_time(info),
+            "score": self.get_diff_score(info),
+            "kills": self.get_diff_kills(info),
+        }
 
     def get_diff_x(self, info: Dict) -> int:
         return info["x_pos"].item() - self.pprev_x
@@ -183,6 +194,10 @@ class CustomRewardEnv(gym.Wrapper):
 
     def get_diff_kills(self, info: Dict) -> int:
         return info["kills"] - self.pprev_kills
+
+    # *--------------------------------------------*
+    # * process
+    # *--------------------------------------------*
 
     def process_reward_x(self, diff_info: Dict) -> int:
         return diff_info["x_pos"] * self.__reward_config.POSITION
