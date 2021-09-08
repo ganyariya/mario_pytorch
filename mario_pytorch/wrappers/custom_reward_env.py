@@ -91,6 +91,9 @@ class CustomRewardEnv(gym.Wrapper):
         # マリオが1機失ったらリセット
         self.reset_on_each_life(info)
 
+        # ゴールについたらリセット処理
+        self.reset_on_arrival_to_goal(info)
+
         # 差分を計算する
         diff_info = self.get_diff_info(info)
 
@@ -126,6 +129,12 @@ class CustomRewardEnv(gym.Wrapper):
         if self.pprev_life - l > 0:
             self.pprev_x = info["x_pos"].item()
             self.pprev_status = STATUS_TO_INT["small"]
+            self.pprev_time = info["time"]
+
+    def reset_on_arrival_to_goal(self, info: Dict) -> None:
+        x = info["x_pos"].item()
+        if self.pprev_x - x > 50:
+            self.pprev_x = info["x_pos"].item()
             self.pprev_time = info["time"]
 
     def accumulate_playlog(self, info: Dict, diff_info: Dict) -> None:
