@@ -77,7 +77,7 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
 
             state = next_state
 
-            if done or info["flag_get"]:
+            if done or info["default"]["flag_get"]:
                 break
 
         logger.log_episode()
