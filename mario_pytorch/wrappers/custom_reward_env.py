@@ -67,14 +67,14 @@ class CustomRewardEnv(gym.Wrapper):
         self.reset_on_each_life(info)
 
         diff_info = self.get_diff_info(info)
-        reward_x = self.process_reward_x(info)
-        reward_coin = self.process_reward_coin(info)
-        reward_life = self.process_reward_life(info)
-        reward_goal = self.process_reward_goal(info)
-        reward_item = self.process_reward_item(info)
-        reward_time = self.process_reward_time(info)
-        reward_score = self.process_reward_score(info)
-        reward_kills = self.process_reward_kills(info)
+        reward_x = self.process_reward_x(diff_info)
+        reward_coin = self.process_reward_coin(diff_info)
+        reward_life = self.process_reward_life(diff_info)
+        reward_goal = self.process_reward_goal(diff_info)
+        reward_item = self.process_reward_item(diff_info)
+        reward_time = self.process_reward_time(diff_info)
+        reward_score = self.process_reward_score(diff_info)
+        reward_kills = self.process_reward_kills(diff_info)
         custom_reward = (
             reward_x
             + reward_coin
@@ -101,75 +101,37 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_status = STATUS_TO_INT["small"]
             self.pprev_time = info["time"]
 
-    def process_reward_x(self, info: Dict) -> int:
-        x = info["x_pos"].item()
-        w = self.__reward_config.POSITION
-        ret = (x - self.pprev_x) * w
-        self.pprev_x = x
-        return ret
+    def process_reward_x(self, diff_info: Dict) -> int:
+        return diff_info["x_pos"] * self.__reward_config.POSITION
 
-    def process_reward_coin(self, info: Dict) -> int:
-        c = info["coins"]
-        w = self.__reward_config.COIN
-        if self.pprev_coin <= c:
-            ret = (c - self.pprev_coin) * w
-        else:
-            ret = ((100 + c) - self.pprev_coin) * w
-        self.pprev_coin = c
-        return ret
+    def process_reward_coin(self, diff_info: Dict) -> int:
+        return diff_info["coins"] * self.__reward_config.COIN
 
-    def process_reward_life(self, info: Dict) -> int:
-        l = info["life"].item()
-        if l == 255:
-            l = -1
-        w = self.__reward_config.LIFE
-        ret = (self.pprev_life - l) * w
-        self.pprev_life = l
-        return ret
+    def process_reward_life(self, diff_info: Dict) -> int:
+        return diff_info["life"] * self.__reward_config.LIFE
 
-    def process_reward_goal(self, info: Dict) -> int:
-        f = int(info["flag_get"])
-        w = self.__reward_config.GOAL
-        ret = f * w
-        return ret
+    def process_reward_goal(self, diff_info: Dict) -> int:
+        return diff_info["goal"] * self.__reward_config.GOAL
 
-    def process_reward_item(self, info: Dict) -> int:
-        s = STATUS_TO_INT[info["status"]]
-        w = self.__reward_config.ITEM
-        d = max(0, (s - self.pprev_status))
-        ret = d * w
-        self.pprev_status = s
-        return ret
+    def process_reward_item(self, diff_info: Dict) -> int:
+        return diff_info["item"] * self.__reward_config.ITEM
 
-    def process_reward_time(self, info: Dict) -> int:
-        t = info["time"]
-        w = self.__reward_config.TIME
-        d = max(0, self.pprev_time - t)
-        ret = d * w
-        self.pprev_time = t
-        return ret
+    def process_reward_time(self, diff_info: Dict) -> int:
+        return diff_info["time"] * self.__reward_config.TIME
 
-    def process_reward_score(self, info: Dict) -> int:
-        s = info["score"]
-        w = self.__reward_config.SCORE
-        ret = (s - self.pprev_score) * w
-        self.pprev_score = s
-        return ret
+    def process_reward_score(self, diff_info: Dict) -> int:
+        return diff_info["score"] * self.__reward_config.SCORE
 
-    def process_reward_kills(self, info: Dict) -> int:
-        k = info["kills"]
-        w = self.__reward_config.ENEMY
-        ret = (k - self.pprev_kills) * w
-        self.pprev_kills = k
-        return ret
+    def process_reward_kills(self, diff_info: Dict) -> int:
+        return diff_info["kills"] * self.__reward_config.ENEMY
 
     def get_diff_info(self, info: Dict) -> Dict:
         return {
             "x_pos": self.get_diff_x(info),
             "coins": self.get_diff_coins(info),
             "life": self.get_diff_life(info),
-            "flag_get": self.get_diff_goal(info),
-            "status": self.get_diff_item(info),
+            "goal": self.get_diff_goal(info),
+            "item": self.get_diff_item(info),
             "time": self.get_diff_time(info),
             "score": self.get_diff_score(info),
             "kills": self.get_diff_kills(info),
