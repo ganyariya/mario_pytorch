@@ -2,6 +2,7 @@ checkpoints
 runs
 results
 *.onnx
+.DS_Store
 
 .idea/
 

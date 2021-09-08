@@ -2,14 +2,15 @@ config_name = base.yaml
 
 date_str=""
 checkpoint_idx=-1
+exploration_rate=0.9
 
 .PHONY: learn
 learn: ## config_name
 	python -m mario_pytorch.cli learn ${config_name} ${config_name}
 
 .PHONY: play
-play: ## config_name date_str checkpoint_idx
-	python -m mario_pytorch.cli play ${config_name} ${config_name} ${date_str} ${checkpoint_idx}
+play: ## config_name date_str checkpoint_idx exploration_rate
+	python -m mario_pytorch.cli play ${config_name} ${config_name} ${date_str} ${checkpoint_idx} ${exploration_rate}
 
 .PHONY: help
 help:
