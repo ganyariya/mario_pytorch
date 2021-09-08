@@ -9,7 +9,6 @@ from mario_pytorch.util.config import EnvConfig, RewardConfig
 from mario_pytorch.util.get_env import get_env
 
 from mario_pytorch.util.process_path import (
-    get_date_path,
     get_env_config_path,
     get_results_path,
     get_checkpoint_path,

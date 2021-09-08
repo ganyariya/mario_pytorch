@@ -1,5 +1,8 @@
 {
     "python.formatting.provider": "black",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": ".venv/bin/pflake8",
     "files.exclude": {
         "**/__pycache__": true,
         "**/__init__.pyc": true,
