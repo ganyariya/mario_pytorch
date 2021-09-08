@@ -22,3 +22,5 @@ jobs:
         run: poetry install --no-interaction
       - name: Pytest
         run: poetry run pytest tests
+      - name: Black
+        run: poetry run black --check --diff .
