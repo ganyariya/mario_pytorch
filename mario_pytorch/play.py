@@ -76,8 +76,6 @@ def play(
             reward_sum += reward
             state = next_state
 
-            time.sleep(0.25)
-
             if done or info["default"]["flag_get"]:
                 break
 
