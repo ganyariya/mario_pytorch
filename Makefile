@@ -14,7 +14,6 @@ play: ## config_name date_str checkpoint_idx exploration_rate
 
 .PHONY: lint
 lint: ##
-	poetry run black mario_pytorch
 	poetry run pflake8 mario_pytorch
 	poetry run black --check --diff .
 
