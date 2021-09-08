@@ -17,9 +17,15 @@ def play(
     reward_scope_config_name: str,
     date_str: str,
     checkpoint_idx: int,
-    exploration_rate: float
+    exploration_rate: float,
 ):
-    cli_play(env_config_name, reward_scope_config_name, date_str, checkpoint_idx, exploration_rate)
+    cli_play(
+        env_config_name,
+        reward_scope_config_name,
+        date_str,
+        checkpoint_idx,
+        exploration_rate,
+    )
 
 
 if __name__ == "__main__":

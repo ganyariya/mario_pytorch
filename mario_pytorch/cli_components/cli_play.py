@@ -8,4 +8,10 @@ def cli_play(
     checkpoint_idx: int,
     exploration_rate: float,
 ) -> None:
-    play(env_config_name, reward_scope_config_name, date_str, checkpoint_idx, exploration_rate)
+    play(
+        env_config_name,
+        reward_scope_config_name,
+        date_str,
+        checkpoint_idx,
+        exploration_rate,
+    )
