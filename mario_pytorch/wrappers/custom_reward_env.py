@@ -41,6 +41,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
+        self.playlog = {}
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
@@ -54,6 +55,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
+        self.playlog = {}
         return self.__prev_state
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
@@ -62,9 +64,9 @@ class CustomRewardEnv(gym.Wrapper):
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
-
         self.reset_on_each_life(info)
 
+        diff_info = self.get_diff_info(info)
         reward_x = self.process_reward_x(info)
         reward_coin = self.process_reward_coin(info)
         reward_life = self.process_reward_life(info)
@@ -160,3 +162,51 @@ class CustomRewardEnv(gym.Wrapper):
         ret = (k - self.pprev_kills) * w
         self.pprev_kills = k
         return ret
+
+    def get_diff_info(self, info: Dict) -> Dict:
+        return {
+            "x_pos": self.get_diff_x(info),
+            "coins": self.get_diff_coins(info),
+            "life": self.get_diff_life(info),
+            "flag_get": self.get_diff_goal(info),
+            "status": self.get_diff_item(info),
+            "time": self.get_diff_time(info),
+            "score": self.get_diff_score(info),
+            "kills": self.get_diff_kills(info),
+        }
+
+    def get_diff_x(self, info: Dict) -> int:
+        return info["x_pos"].item() - self.pprev_x
+
+    def get_diff_coins(self, info: Dict) -> int:
+        c = info["coins"]
+        if self.pprev_coin <= c:
+            ret = c - self.pprev_coin
+        else:
+            ret = (100 + c) - self.pprev_coin
+        return ret
+
+    def get_diff_life(self, info: Dict) -> int:
+        l = info["life"].item()
+        if l == 255:
+            l = -1
+        return l - self.pprev_life
+
+    def get_diff_goal(self, info: Dict) -> int:
+        return int(info["flag_get"])
+
+    def get_diff_item(self, info: Dict) -> int:
+        return STATUS_TO_INT[info["status"]] - self.pprev_status
+
+    def get_diff_time(self, info: Dict) -> int:
+        return info["time"] - self.pprev_time
+
+    def get_diff_score(self, info: Dict) -> int:
+        return info["score"] - self.pprev_score
+
+    def get_diff_kills(self, info: Dict) -> int:
+        return info["kills"] - self.pprev_kills
+
+    def get_playlog_info(self, info: Dict) -> None:
+        """プレイログ用の log を返す"""
+        pass
