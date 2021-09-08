@@ -57,9 +57,10 @@ class BaseMario:
         Given a state, choose an epsilon-greedy action and update value of step.
 
         Inputs:
-        state(LazyFrame): A single observation of the current state, dimension is (state_dim)
+        state(LazyFrame):
+            A single observation of the current state, dimension is (state_dim)
         Outputs:
-        action_idx (int): An integer representing which action Mario will perform
+            action_idx (int): An integer representing which action Mario will perform
         """
         # EXPLORE
         if np.random.rand() < self.exploration_rate:
@@ -199,7 +200,8 @@ class Mario(BaseMario):
         DQN
         https://qiita.com/ishizakiiii/items/5eff79b59bce74fdca0d#q-learning
 
-        Q(s, a) <- Q(s, a) + \alpha ( R(s, a) + \gamma * (argmax_{a'}Qt(s', a')) - Qo(s, a))
+        Q(s, a) <- Q(s, a) + \alpha ( R(s, a) +
+            gamma * (argmax_{a'}Qt(s', a')) - Qo(s, a))
         Qt=target（固定）  Qo=online (学習ネットワーク)
 
         R(s, a) + rQt(s', a') = 実際に行動して得られた値 C

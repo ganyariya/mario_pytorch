@@ -24,3 +24,5 @@ jobs:
         run: poetry run pytest tests
       - name: Black
         run: poetry run black --check --diff .
+      - name: PFlake8
+        run: poetry run pflake8 mario_pytorch

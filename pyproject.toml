@@ -8,7 +8,6 @@ authors = ["ganariya <ganariya2525@gmail.com>"]
 python = "^3.9"
 torch = "^1.9.0"
 torchvision = "^0.10.0"
-flake8 = "^3.9.2"
 matplotlib = "^3.4.3"
 pydantic = "^1.8.2"
 PyYAML = "^5.4.1"
@@ -21,7 +20,19 @@ gym-super-mario-bros = {git = "https://github.com/ganyariya/gym-super-mario-bros
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
 black = "^21.8b0"
+flake8 = "^3.9.2"
+pyproject-flake8 = "^0.0.1-alpha.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# https://qiita.com/que9/items/7cf9f992b8decb4265c1
+# https://blog.hirokiky.org/entry/2019/06/03/202745
+[tool.flake8]
+max-line-length = 88
+extend-ignore = """
+E203,
+E741,
+F401
+"""
