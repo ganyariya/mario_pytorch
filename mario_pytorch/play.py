@@ -2,10 +2,8 @@
 https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 https://github.com/YuansongFeng/MadMario/blob/master/agent.py
 """
-
 import torch
 
-from pathlib import Path
 from mario_pytorch.agent.mario import LearnedMario
 from mario_pytorch.util.config import EnvConfig, RewardConfig
 from mario_pytorch.util.get_env import get_env

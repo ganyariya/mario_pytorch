@@ -36,13 +36,11 @@ def _set_logger(save_dir: Path) -> None:
     logger.setLevel(INFO)
 
 
-_writer: Final[SummaryWriter] = SummaryWriter()
-
-
 class MetricLogger:
     def __init__(self, save_path: Path) -> None:
         _set_logger(save_path)
 
+        self._writer: Final[SummaryWriter] = SummaryWriter()
         self.save_path: Final[Path] = save_path
         self.image_path: Final[Path] = save_path / "image"
         self.save_metric_log: Final[Path] = save_path / "metric_log"
@@ -137,11 +135,11 @@ class MetricLogger:
         time_since_last_record = np.round(self.record_time - last_record_time, 3)
 
         # TensorBoard
-        _writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
-        _writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
-        _writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
-        _writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
-        _writer.add_scalar("Episode/Exploration", epsilon, episode)
+        self._writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
+        self._writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
+        self._writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
+        self._writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
+        self._writer.add_scalar("Episode/Exploration", epsilon, episode)
 
         self.logger.info(
             f"Episode {episode} - "
