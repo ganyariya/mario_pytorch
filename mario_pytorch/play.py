@@ -41,6 +41,7 @@ def play(
     reward_scope_config_name: str,
     date_str: str,
     checkpoint_idx: int,
+    exploration_rate: float,
 ) -> None:
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
@@ -58,6 +59,7 @@ def play(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
         action_dim=env.action_space.n,
         model=model,
+        exploration_rate=exploration_rate,
     )
 
     for e in range(env_config.EPISODES):
