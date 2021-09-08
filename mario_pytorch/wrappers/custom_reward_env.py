@@ -14,6 +14,26 @@ STATUS_TO_INT: Final[Dict[str, int]] = {
 logger = getLogger(__name__)
 
 
+def initPlayLog() -> Dict:
+    return {
+        "x_pos": 0,
+        "x_abs": 0,
+        "x_plus": 0,
+        "x_minus": 0,
+        "coins": 0,
+        "life": 0,
+        "life_plus": 0,
+        "life_minus": 0,
+        "goal": 0,
+        "item": 0,
+        "item_plus": 0,
+        "item_minus": 0,
+        "elapsed": 0,
+        "score": 0,
+        "kills": 0,
+    }
+
+
 # https://zakopilo.hatenablog.jp/entry/2021/01/30/214806
 class CustomRewardEnv(gym.Wrapper):
     """カスタム報酬関数を実装する.
@@ -26,7 +46,6 @@ class CustomRewardEnv(gym.Wrapper):
     Notes
     -----
     - state.shape: (240, 256, 3)
-    - 重複を避けるために `__` とする
     """
 
     def __init__(self, env: gym.Env, reward_config: RewardConfig) -> None:
@@ -41,7 +60,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
-        self.playlog = {}
+        self.playlog = initPlayLog()
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
@@ -50,12 +69,16 @@ class CustomRewardEnv(gym.Wrapper):
         self.__prev_state = self.env.reset(**kwargs)
         self.pprev_x = info["x_pos"]
         self.pprev_coin = 0
-        self.pprev_life = 2
+        self.pprev_life = info["life"]
         self.pprev_time = info["time"]
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
-        self.playlog = {}
+
+        self.playlog = initPlayLog()
+        self.playlog["x_pos"] = info["x_pos"]
+        self.playlog["life"] = info["life"]
+
         return self.__prev_state
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
@@ -77,7 +100,20 @@ class CustomRewardEnv(gym.Wrapper):
         # 差分用変数を更新する
         self.update_pprev(info)
 
-        return state, custom_reward, done, info
+        # プレイログを累積する
+        self.accumulate_playlog(info, diff_info)
+
+        return (
+            state,
+            custom_reward,
+            done,
+            {
+                "default": info,
+                "diff_info": diff_info,
+                "custom_reward_info": custom_reward_info,
+                "playlog": self.playlog,
+            },
+        )
 
     def reset_on_each_life(self, info: Dict) -> None:
         """ライフが減少したときの reset 処理.
@@ -91,6 +127,57 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_x = info["x_pos"].item()
             self.pprev_status = STATUS_TO_INT["small"]
             self.pprev_time = info["time"]
+
+    def accumulate_playlog(self, info: Dict, diff_info: Dict) -> None:
+        self.accumulate_x(info, diff_info)
+        self.accumulate_coins(diff_info)
+        self.accumulate_kills(diff_info)
+        self.accumulate_life(diff_info)
+        self.accumulate_goal(diff_info)
+        self.accumulate_item(diff_info)
+        self.accumulate_elapsed(diff_info)
+        self.accumulate_score(diff_info)
+
+    # *--------------------------------------------*
+    # * accumulate
+    # *--------------------------------------------*
+
+    def accumulate_x(self, info: Dict, diff_info: Dict) -> None:
+        self.playlog["x_pos"] = info["x_pos"]
+        self.playlog["x_abs"] += abs(diff_info["x_pos"])
+        if diff_info["x_pos"] > 0:
+            self.playlog["x_plus"] += diff_info["x_pos"]
+        if diff_info["x_pos"] < 0:
+            self.playlog["x_minus"] += diff_info["x_pos"]
+
+    def accumulate_coins(self, diff_info: Dict) -> None:
+        self.playlog["coins"] += diff_info["coins"]
+
+    def accumulate_kills(self, diff_info: Dict) -> None:
+        self.playlog["kills"] += diff_info["kills"]
+
+    def accumulate_life(self, diff_info: Dict) -> None:
+        self.playlog["life"] += diff_info["life"]
+        if diff_info["life"] > 0:
+            self.playlog["life_plus"] += diff_info["life"]
+        if diff_info["life"] < 0:
+            self.playlog["life_minus"] += diff_info["life"]
+
+    def accumulate_goal(self, diff_info: Dict) -> None:
+        self.playlog["goal"] += diff_info["goal"]
+
+    def accumulate_item(self, diff_info: Dict) -> None:
+        self.playlog["item"] += diff_info["item"]
+        if diff_info["item"] > 0:
+            self.playlog["item_plus"] += diff_info["item"]
+        if diff_info["item"] < 0:
+            self.playlog["item_minus"] += diff_info["item"]
+
+    def accumulate_elapsed(self, diff_info: Dict) -> None:
+        self.playlog["elapsed"] += abs(diff_info["elapsed"])
+
+    def accumulate_score(self, diff_info: Dict) -> None:
+        self.playlog["score"] += diff_info["score"]
 
     # *--------------------------------------------*
     # * update
@@ -146,7 +233,7 @@ class CustomRewardEnv(gym.Wrapper):
             "life": self.get_diff_life(info),
             "goal": self.get_diff_goal(info),
             "item": self.get_diff_item(info),
-            "time": self.get_diff_time(info),
+            "elapsed": self.get_diff_time(info),
             "score": self.get_diff_score(info),
             "kills": self.get_diff_kills(info),
         }
@@ -175,7 +262,7 @@ class CustomRewardEnv(gym.Wrapper):
         return STATUS_TO_INT[info["status"]] - self.pprev_status
 
     def get_diff_time(self, info: Dict) -> int:
-        return info["time"] - self.pprev_time
+        return abs(info["time"] - self.pprev_time)
 
     def get_diff_score(self, info: Dict) -> int:
         return info["score"] - self.pprev_score
@@ -193,17 +280,17 @@ class CustomRewardEnv(gym.Wrapper):
         life = self.process_reward_life(diff_info)
         goal = self.process_reward_goal(diff_info)
         item = self.process_reward_item(diff_info)
-        time = self.process_reward_time(diff_info)
+        elapsed = self.process_reward_elapsed(diff_info)
         score = self.process_reward_score(diff_info)
         kills = self.process_reward_kills(diff_info)
-        reward = x_pos + coins + life + goal + item + time + score + kills
+        reward = x_pos + coins + life + goal + item + elapsed + score + kills
         reward_dict = {
             "x_pos": x_pos,
             "coins": coins,
             "life": life,
             "goal": goal,
             "item": item,
-            "time": time,
+            "elapsed": elapsed,
             "score": score,
             "kills": kills,
         }
@@ -224,8 +311,8 @@ class CustomRewardEnv(gym.Wrapper):
     def process_reward_item(self, diff_info: Dict) -> int:
         return diff_info["item"] * self.__reward_config.ITEM
 
-    def process_reward_time(self, diff_info: Dict) -> int:
-        return diff_info["time"] * self.__reward_config.TIME
+    def process_reward_elapsed(self, diff_info: Dict) -> int:
+        return diff_info["elapsed"] * self.__reward_config.TIME
 
     def process_reward_score(self, diff_info: Dict) -> int:
         return diff_info["score"] * self.__reward_config.SCORE
