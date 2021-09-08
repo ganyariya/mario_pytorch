@@ -1,6 +1,38 @@
 import numpy as np
 from mario_pytorch.wrappers.custom_reward_env import CustomRewardEnv
 
+# *--------------------------------------------*
+# * Main
+# *--------------------------------------------*
+
+
+def test_process_reward(make_env: CustomRewardEnv):
+    diff_info = {
+        "x_pos": 1,
+        "coins": 2,
+        "life": 3,
+        "goal": 4,
+        "item": 5,
+        "time": 6,
+        "score": 7,
+        "kills": 8,
+    }
+    reward, reward_dict = make_env.process_reward(diff_info)
+    assert reward == 36
+    assert reward_dict["x_pos"] == 1
+    assert reward_dict["coins"] == 2
+    assert reward_dict["life"] == 3
+    assert reward_dict["goal"] == 4
+    assert reward_dict["item"] == 5
+    assert reward_dict["time"] == 6
+    assert reward_dict["score"] == 7
+    assert reward_dict["kills"] == 8
+
+
+# *--------------------------------------------*
+# * Each
+# *--------------------------------------------*
+
 
 def test_x(make_env: CustomRewardEnv):
     info = {"x_pos": np.array(10)}

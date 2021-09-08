@@ -68,26 +68,14 @@ class CustomRewardEnv(gym.Wrapper):
         # マリオが1機失ったらリセット
         self.reset_on_each_life(info)
 
+        # 差分を計算する
         diff_info = self.get_diff_info(info)
 
-        reward_x = self.process_reward_x(diff_info)
-        reward_coin = self.process_reward_coin(diff_info)
-        reward_life = self.process_reward_life(diff_info)
-        reward_goal = self.process_reward_goal(diff_info)
-        reward_item = self.process_reward_item(diff_info)
-        reward_time = self.process_reward_time(diff_info)
-        reward_score = self.process_reward_score(diff_info)
-        reward_kills = self.process_reward_kills(diff_info)
-        custom_reward = (
-            reward_x
-            + reward_coin
-            + reward_life
-            + reward_goal
-            + reward_item
-            + reward_time
-            + reward_score
-            + reward_kills
-        )
+        # カスタム報酬と内訳を計算する
+        custom_reward, custom_reward_info = self.process_reward(diff_info)
+
+        # 差分用変数を更新する
+        self.update_pprev(info)
 
         return state, custom_reward, done, info
 
@@ -198,6 +186,28 @@ class CustomRewardEnv(gym.Wrapper):
     # *--------------------------------------------*
     # * process
     # *--------------------------------------------*
+
+    def process_reward(self, diff_info: Dict) -> Tuple[int, Dict]:
+        x_pos = self.process_reward_x(diff_info)
+        coins = self.process_reward_coin(diff_info)
+        life = self.process_reward_life(diff_info)
+        goal = self.process_reward_goal(diff_info)
+        item = self.process_reward_item(diff_info)
+        time = self.process_reward_time(diff_info)
+        score = self.process_reward_score(diff_info)
+        kills = self.process_reward_kills(diff_info)
+        reward = x_pos + coins + life + goal + item + time + score + kills
+        reward_dict = {
+            "x_pos": x_pos,
+            "coins": coins,
+            "life": life,
+            "goal": goal,
+            "item": item,
+            "time": time,
+            "score": score,
+            "kills": kills,
+        }
+        return reward, reward_dict
 
     def process_reward_x(self, diff_info: Dict) -> int:
         return diff_info["x_pos"] * self.__reward_config.POSITION
