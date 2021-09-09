@@ -104,7 +104,7 @@ class CustomRewardEnv(gym.Wrapper):
         custom_reward, custom_reward_info = self.process_reward(diff_info)
 
         # 差分用変数を更新する
-        self.update_pprev(info)
+        self.update_pprev(info_model)
 
         # プレイログを累積する
         self.accumulate_playlog(info, diff_info)
@@ -195,38 +195,38 @@ class CustomRewardEnv(gym.Wrapper):
     # * update
     # *--------------------------------------------*
 
-    def update_pprev(self, info: Dict) -> None:
-        self.update_pprev_x(info)
-        self.update_pprev_coin(info)
-        self.update_pprev_life(info)
-        self.update_pprev_status(info)
-        self.update_pprev_time(info)
-        self.update_pprev_score(info)
-        self.update_pprev_kills(info)
+    def update_pprev(self, info_model: InfoModel) -> None:
+        self.update_pprev_x(info_model)
+        self.update_pprev_coin(info_model)
+        self.update_pprev_life(info_model)
+        self.update_pprev_status(info_model)
+        self.update_pprev_time(info_model)
+        self.update_pprev_score(info_model)
+        self.update_pprev_kills(info_model)
 
-    def update_pprev_x(self, info: Dict) -> None:
-        self.pprev_x = info["x_pos"]
+    def update_pprev_x(self, info_model: InfoModel) -> None:
+        self.pprev_x = info_model.x_pos
 
-    def update_pprev_coin(self, info: Dict) -> None:
-        self.pprev_coin = info["coins"]
+    def update_pprev_coin(self, info_model: InfoModel) -> None:
+        self.pprev_coin = info_model.coins
 
-    def update_pprev_life(self, info: Dict) -> None:
-        l = info["life"].item()
+    def update_pprev_life(self, info_model: InfoModel) -> None:
+        l = info_model.life
         if l == 255:
             l = -1
         self.pprev_life = l
 
-    def update_pprev_status(self, info: Dict) -> None:
-        self.pprev_status = STATUS_TO_INT[info["status"]]
+    def update_pprev_status(self, info_model: InfoModel) -> None:
+        self.pprev_status = STATUS_TO_INT[info_model.status]
 
-    def update_pprev_time(self, info: Dict) -> None:
-        self.pprev_time = info["time"]
+    def update_pprev_time(self, info_model: InfoModel) -> None:
+        self.pprev_time = info_model.time
 
-    def update_pprev_score(self, info: Dict) -> None:
-        self.pprev_score = info["score"]
+    def update_pprev_score(self, info_model: InfoModel) -> None:
+        self.pprev_score = info_model.score
 
-    def update_pprev_kills(self, info: Dict) -> None:
-        self.pprev_kills = info["kills"]
+    def update_pprev_kills(self, info_model: InfoModel) -> None:
+        self.pprev_kills = info_model.kills
 
     # *--------------------------------------------*
     # * diff
