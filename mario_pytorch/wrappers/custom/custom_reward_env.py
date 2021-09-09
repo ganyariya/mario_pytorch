@@ -66,19 +66,20 @@ class CustomRewardEnv(gym.Wrapper):
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
         _, _, _, info = self.env.step(0)
+        info_model = InfoModel.create(info)
 
         self.__prev_state = self.env.reset(**kwargs)
-        self.pprev_x = info["x_pos"]
+        self.pprev_x = info_model.x_pos
         self.pprev_coin = 0
-        self.pprev_life = info["life"]
-        self.pprev_time = info["time"]
+        self.pprev_life = info_model.life
+        self.pprev_time = info_model.time
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
 
         self.playlog = initPlayLog()
-        self.playlog["x_pos"] = info["x_pos"]
-        self.playlog["life"] = info["life"]
+        self.playlog["x_pos"] = info_model.x_pos
+        self.playlog["life"] = info_model.life
 
         return self.__prev_state
 
@@ -89,7 +90,6 @@ class CustomRewardEnv(gym.Wrapper):
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
         info_model = InfoModel.create(info)
-        print(info_model)
 
         # マリオが1機失ったらリセット
         self.reset_on_each_life(info_model)
@@ -107,7 +107,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.update_pprev(info_model)
 
         # プレイログを累積する
-        self.accumulate_playlog(info, diff_info)
+        self.accumulate_playlog(info_model, diff_info)
 
         return (
             state,
@@ -140,8 +140,8 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_x = info_model.x_pos
             self.pprev_time = info_model.time
 
-    def accumulate_playlog(self, info: Dict, diff_info: Dict) -> None:
-        self.accumulate_x(info, diff_info)
+    def accumulate_playlog(self, info_model: InfoModel, diff_info: Dict) -> None:
+        self.accumulate_x(info_model, diff_info)
         self.accumulate_coins(diff_info)
         self.accumulate_kills(diff_info)
         self.accumulate_life(diff_info)
@@ -154,8 +154,8 @@ class CustomRewardEnv(gym.Wrapper):
     # * accumulate
     # *--------------------------------------------*
 
-    def accumulate_x(self, info: Dict, diff_info: Dict) -> None:
-        self.playlog["x_pos"] = info["x_pos"]
+    def accumulate_x(self, info_model: InfoModel, diff_info: Dict) -> None:
+        self.playlog["x_pos"] = info_model.x_pos
         self.playlog["x_abs"] += abs(diff_info["x_pos"])
         if diff_info["x_pos"] > 0:
             self.playlog["x_plus"] += diff_info["x_pos"]
