@@ -5,6 +5,7 @@ import gym
 import numpy as np
 
 from mario_pytorch.util.config import RewardConfig
+from mario_pytorch.wrappers.custom.custom_info_model import InfoModel
 
 STATUS_TO_INT: Final[Dict[str, int]] = {
     "small": 0,
@@ -87,15 +88,17 @@ class CustomRewardEnv(gym.Wrapper):
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
+        info_model = InfoModel.create(info)
+        print(info_model)
 
         # マリオが1機失ったらリセット
-        self.reset_on_each_life(info)
+        self.reset_on_each_life(info_model)
 
         # ゴールについたらリセット処理
-        self.reset_on_arrival_to_goal(info)
+        self.reset_on_arrival_to_goal(info_model)
 
         # 差分を計算する
-        diff_info = self.get_diff_info(info)
+        diff_info = self.get_diff_info(info_model)
 
         # カスタム報酬と内訳を計算する
         custom_reward, custom_reward_info = self.process_reward(diff_info)
@@ -118,24 +121,24 @@ class CustomRewardEnv(gym.Wrapper):
             },
         )
 
-    def reset_on_each_life(self, info: Dict) -> None:
+    def reset_on_each_life(self, info_model: InfoModel) -> None:
         """ライフが減少したときの reset 処理.
 
         Notes
         -----
         バグっている可能性は高い
         """
-        l = info["life"].item()
+        l = info_model.life
         if self.pprev_life - l > 0:
-            self.pprev_x = info["x_pos"].item()
+            self.pprev_x = info_model.x_pos
             self.pprev_status = STATUS_TO_INT["small"]
-            self.pprev_time = info["time"]
+            self.pprev_time = info_model.time
 
-    def reset_on_arrival_to_goal(self, info: Dict) -> None:
-        x = info["x_pos"].item()
+    def reset_on_arrival_to_goal(self, info_model: InfoModel) -> None:
+        x = info_model.x_pos
         if self.pprev_x - x > 50:
-            self.pprev_x = info["x_pos"].item()
-            self.pprev_time = info["time"]
+            self.pprev_x = info_model.x_pos
+            self.pprev_time = info_model.time
 
     def accumulate_playlog(self, info: Dict, diff_info: Dict) -> None:
         self.accumulate_x(info, diff_info)
@@ -229,7 +232,7 @@ class CustomRewardEnv(gym.Wrapper):
     # * diff
     # *--------------------------------------------*
 
-    def get_diff_info(self, info: Dict) -> Dict:
+    def get_diff_info(self, info_model: InfoModel) -> Dict:
         """差分を計算する.
 
         Notes
@@ -237,47 +240,47 @@ class CustomRewardEnv(gym.Wrapper):
         now - prev を返す.
         """
         return {
-            "x_pos": self.get_diff_x(info),
-            "coins": self.get_diff_coins(info),
-            "life": self.get_diff_life(info),
-            "goal": self.get_diff_goal(info),
-            "item": self.get_diff_item(info),
-            "elapsed": self.get_diff_time(info),
-            "score": self.get_diff_score(info),
-            "kills": self.get_diff_kills(info),
+            "x_pos": self.get_diff_x(info_model),
+            "coins": self.get_diff_coins(info_model),
+            "life": self.get_diff_life(info_model),
+            "goal": self.get_diff_goal(info_model),
+            "item": self.get_diff_item(info_model),
+            "elapsed": self.get_diff_time(info_model),
+            "score": self.get_diff_score(info_model),
+            "kills": self.get_diff_kills(info_model),
         }
 
-    def get_diff_x(self, info: Dict) -> int:
-        return info["x_pos"].item() - self.pprev_x
+    def get_diff_x(self, info_model: InfoModel) -> int:
+        return info_model.x_pos - self.pprev_x
 
-    def get_diff_coins(self, info: Dict) -> int:
-        c = info["coins"]
+    def get_diff_coins(self, info_model: InfoModel) -> int:
+        c = info_model.coins
         if self.pprev_coin <= c:
             ret = c - self.pprev_coin
         else:
             ret = (100 + c) - self.pprev_coin
         return ret
 
-    def get_diff_life(self, info: Dict) -> int:
-        l = info["life"].item()
+    def get_diff_life(self, info_model: InfoModel) -> int:
+        l = info_model.life
         if l == 255:
             l = -1
         return l - self.pprev_life
 
-    def get_diff_goal(self, info: Dict) -> int:
-        return int(info["flag_get"])
+    def get_diff_goal(self, info_model: InfoModel) -> int:
+        return int(info_model.flag_get)
 
-    def get_diff_item(self, info: Dict) -> int:
-        return STATUS_TO_INT[info["status"]] - self.pprev_status
+    def get_diff_item(self, info_model: InfoModel) -> int:
+        return STATUS_TO_INT[info_model.status] - self.pprev_status
 
-    def get_diff_time(self, info: Dict) -> int:
-        return abs(info["time"] - self.pprev_time)
+    def get_diff_time(self, info_model: InfoModel) -> int:
+        return abs(info_model.time - self.pprev_time)
 
-    def get_diff_score(self, info: Dict) -> int:
-        return info["score"] - self.pprev_score
+    def get_diff_score(self, info_model: InfoModel) -> int:
+        return info_model.score - self.pprev_score
 
-    def get_diff_kills(self, info: Dict) -> int:
-        return info["kills"] - self.pprev_kills
+    def get_diff_kills(self, info_model: InfoModel) -> int:
+        return info_model.kills - self.pprev_kills
 
     # *--------------------------------------------*
     # * process
