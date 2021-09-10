@@ -99,7 +99,7 @@ class CustomRewardEnv(gym.Wrapper):
             custom_reward,
             done,
             {
-                "default": info,
+                "default": info_model,
                 "diff_info": diff_info_model,
                 "custom_reward_info": custom_reward_info_model,
                 "playlog": self.playlog,

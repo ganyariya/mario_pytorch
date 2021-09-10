@@ -79,7 +79,7 @@ def play(
             # print(info["playlog"])
             # time.sleep(0.1)
 
-            if done or info["default"]["flag_get"]:
+            if done or info["default"].flag_get:
                 break
 
         print(reward_sum)
