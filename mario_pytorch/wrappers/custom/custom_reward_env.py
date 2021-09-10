@@ -5,7 +5,7 @@ import gym
 import numpy as np
 
 from mario_pytorch.util.config import RewardConfig
-from mario_pytorch.wrappers.custom.custom_info_model import InfoModel
+from mario_pytorch.wrappers.custom.custom_info_model import InfoModel, DiffInfoModel
 
 STATUS_TO_INT: Final[Dict[str, int]] = {
     "small": 0,
@@ -98,16 +98,16 @@ class CustomRewardEnv(gym.Wrapper):
         self.reset_on_arrival_to_goal(info_model)
 
         # 差分を計算する
-        diff_info = self.get_diff_info(info_model)
+        diff_info_model = self.get_diff_info_model(info_model)
 
         # カスタム報酬と内訳を計算する
-        custom_reward, custom_reward_info = self.process_reward(diff_info)
+        custom_reward, custom_reward_info = self.process_reward(diff_info_model)
 
         # 差分用変数を更新する
         self.update_pprev(info_model)
 
         # プレイログを累積する
-        self.accumulate_playlog(info_model, diff_info)
+        self.accumulate_playlog(info_model, diff_info_model)
 
         return (
             state,
@@ -115,7 +115,7 @@ class CustomRewardEnv(gym.Wrapper):
             done,
             {
                 "default": info,
-                "diff_info": diff_info,
+                "diff_info": diff_info_model,
                 "custom_reward_info": custom_reward_info,
                 "playlog": self.playlog,
             },
@@ -140,56 +140,60 @@ class CustomRewardEnv(gym.Wrapper):
             self.pprev_x = info_model.x_pos
             self.pprev_time = info_model.time
 
-    def accumulate_playlog(self, info_model: InfoModel, diff_info: Dict) -> None:
-        self.accumulate_x(info_model, diff_info)
-        self.accumulate_coins(diff_info)
-        self.accumulate_kills(diff_info)
-        self.accumulate_life(diff_info)
-        self.accumulate_goal(diff_info)
-        self.accumulate_item(diff_info)
-        self.accumulate_elapsed(diff_info)
-        self.accumulate_score(diff_info)
-
     # *--------------------------------------------*
     # * accumulate
     # *--------------------------------------------*
 
-    def accumulate_x(self, info_model: InfoModel, diff_info: Dict) -> None:
+    def accumulate_playlog(
+        self, info_model: InfoModel, diff_info_model: DiffInfoModel
+    ) -> None:
+        self.accumulate_x(info_model, diff_info_model)
+        self.accumulate_coins(diff_info_model)
+        self.accumulate_kills(diff_info_model)
+        self.accumulate_life(diff_info_model)
+        self.accumulate_goal(diff_info_model)
+        self.accumulate_item(diff_info_model)
+        self.accumulate_elapsed(diff_info_model)
+        self.accumulate_score(diff_info_model)
+
+    def accumulate_x(
+        self, info_model: InfoModel, diff_info_model: DiffInfoModel
+    ) -> None:
         self.playlog["x_pos"] = info_model.x_pos
-        self.playlog["x_abs"] += abs(diff_info["x_pos"])
-        if diff_info["x_pos"] > 0:
-            self.playlog["x_plus"] += diff_info["x_pos"]
-        if diff_info["x_pos"] < 0:
-            self.playlog["x_minus"] += diff_info["x_pos"]
+        self.playlog["x_abs"] += abs(diff_info_model.x_pos)
+        if diff_info_model.x_pos > 0:
+            self.playlog["x_plus"] += diff_info_model.x_pos
+        if diff_info_model.x_pos < 0:
+            self.playlog["x_minus"] += diff_info_model.x_pos
 
-    def accumulate_coins(self, diff_info: Dict) -> None:
-        self.playlog["coins"] += diff_info["coins"]
+    def accumulate_coins(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["coins"] += diff_info_model.coins
 
-    def accumulate_kills(self, diff_info: Dict) -> None:
-        self.playlog["kills"] += diff_info["kills"]
+    def accumulate_kills(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["kills"] += diff_info_model.kills
 
-    def accumulate_life(self, diff_info: Dict) -> None:
-        self.playlog["life"] += diff_info["life"]
-        if diff_info["life"] > 0:
-            self.playlog["life_plus"] += diff_info["life"]
-        if diff_info["life"] < 0:
-            self.playlog["life_minus"] += diff_info["life"]
+    def accumulate_life(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["life"] += diff_info_model.life
+        if diff_info_model.life > 0:
+            self.playlog["life_plus"] += diff_info_model.life
+        if diff_info_model.life < 0:
+            self.playlog["life_minus"] += diff_info_model.life
 
-    def accumulate_goal(self, diff_info: Dict) -> None:
-        self.playlog["goal"] += diff_info["goal"]
+    def accumulate_goal(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["goal"] += diff_info_model.goal
 
-    def accumulate_item(self, diff_info: Dict) -> None:
-        self.playlog["item"] += diff_info["item"]
-        if diff_info["item"] > 0:
-            self.playlog["item_plus"] += diff_info["item"]
-        if diff_info["item"] < 0:
-            self.playlog["item_minus"] += diff_info["item"]
+    def accumulate_item(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["item"] += diff_info_model.item
+        if diff_info_model.item > 0:
+            self.playlog["item_plus"] += diff_info_model.item
+        if diff_info_model.item < 0:
+            self.playlog["item_minus"] += diff_info_model.item
 
-    def accumulate_elapsed(self, diff_info: Dict) -> None:
-        self.playlog["elapsed"] += abs(diff_info["elapsed"])
+    def accumulate_elapsed(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["elapsed"] += abs(diff_info_model.elapsed)
 
-    def accumulate_score(self, diff_info: Dict) -> None:
-        self.playlog["score"] += diff_info["score"]
+    def accumulate_score(self, diff_info_model: DiffInfoModel) -> None:
+        self.playlog["score"] += diff_info_model.score
 
     # *--------------------------------------------*
     # * update
@@ -232,23 +236,25 @@ class CustomRewardEnv(gym.Wrapper):
     # * diff
     # *--------------------------------------------*
 
-    def get_diff_info(self, info_model: InfoModel) -> Dict:
+    def get_diff_info_model(self, info_model: InfoModel) -> DiffInfoModel:
         """差分を計算する.
 
         Notes
         -----
         now - prev を返す.
         """
-        return {
-            "x_pos": self.get_diff_x(info_model),
-            "coins": self.get_diff_coins(info_model),
-            "life": self.get_diff_life(info_model),
-            "goal": self.get_diff_goal(info_model),
-            "item": self.get_diff_item(info_model),
-            "elapsed": self.get_diff_time(info_model),
-            "score": self.get_diff_score(info_model),
-            "kills": self.get_diff_kills(info_model),
-        }
+        return DiffInfoModel(
+            **{
+                "x_pos": self.get_diff_x(info_model),
+                "coins": self.get_diff_coins(info_model),
+                "life": self.get_diff_life(info_model),
+                "goal": self.get_diff_goal(info_model),
+                "item": self.get_diff_item(info_model),
+                "elapsed": self.get_diff_time(info_model),
+                "score": self.get_diff_score(info_model),
+                "kills": self.get_diff_kills(info_model),
+            }
+        )
 
     def get_diff_x(self, info_model: InfoModel) -> int:
         return info_model.x_pos - self.pprev_x
@@ -286,15 +292,15 @@ class CustomRewardEnv(gym.Wrapper):
     # * process
     # *--------------------------------------------*
 
-    def process_reward(self, diff_info: Dict) -> Tuple[int, Dict]:
-        x_pos = self.process_reward_x(diff_info)
-        coins = self.process_reward_coin(diff_info)
-        life = self.process_reward_life(diff_info)
-        goal = self.process_reward_goal(diff_info)
-        item = self.process_reward_item(diff_info)
-        elapsed = self.process_reward_elapsed(diff_info)
-        score = self.process_reward_score(diff_info)
-        kills = self.process_reward_kills(diff_info)
+    def process_reward(self, diff_info_model: DiffInfoModel) -> Tuple[int, Dict]:
+        x_pos = self.process_reward_x(diff_info_model)
+        coins = self.process_reward_coin(diff_info_model)
+        life = self.process_reward_life(diff_info_model)
+        goal = self.process_reward_goal(diff_info_model)
+        item = self.process_reward_item(diff_info_model)
+        elapsed = self.process_reward_elapsed(diff_info_model)
+        score = self.process_reward_score(diff_info_model)
+        kills = self.process_reward_kills(diff_info_model)
         reward = x_pos + coins + life + goal + item + elapsed + score + kills
         reward_dict = {
             "x_pos": x_pos,
@@ -308,26 +314,26 @@ class CustomRewardEnv(gym.Wrapper):
         }
         return reward, reward_dict
 
-    def process_reward_x(self, diff_info: Dict) -> int:
-        return diff_info["x_pos"] * self.__reward_config.POSITION
+    def process_reward_x(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.x_pos * self.__reward_config.POSITION
 
-    def process_reward_coin(self, diff_info: Dict) -> int:
-        return diff_info["coins"] * self.__reward_config.COIN
+    def process_reward_coin(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.coins * self.__reward_config.COIN
 
-    def process_reward_life(self, diff_info: Dict) -> int:
-        return diff_info["life"] * self.__reward_config.LIFE
+    def process_reward_life(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.life * self.__reward_config.LIFE
 
-    def process_reward_goal(self, diff_info: Dict) -> int:
-        return diff_info["goal"] * self.__reward_config.GOAL
+    def process_reward_goal(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.goal * self.__reward_config.GOAL
 
-    def process_reward_item(self, diff_info: Dict) -> int:
-        return diff_info["item"] * self.__reward_config.ITEM
+    def process_reward_item(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.item * self.__reward_config.ITEM
 
-    def process_reward_elapsed(self, diff_info: Dict) -> int:
-        return diff_info["elapsed"] * self.__reward_config.TIME
+    def process_reward_elapsed(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.elapsed * self.__reward_config.TIME
 
-    def process_reward_score(self, diff_info: Dict) -> int:
-        return diff_info["score"] * self.__reward_config.SCORE
+    def process_reward_score(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.score * self.__reward_config.SCORE
 
-    def process_reward_kills(self, diff_info: Dict) -> int:
-        return diff_info["kills"] * self.__reward_config.ENEMY
+    def process_reward_kills(self, diff_info_model: DiffInfoModel) -> int:
+        return diff_info_model.kills * self.__reward_config.ENEMY

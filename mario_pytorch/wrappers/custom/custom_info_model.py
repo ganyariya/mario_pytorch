@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, NonNegativeInt
 
 
 class InfoModel(BaseModel):
@@ -34,3 +34,14 @@ class InfoModel(BaseModel):
                 "kills": 0,
             }
         )
+
+
+class DiffInfoModel(BaseModel):
+    x_pos: int
+    coins: int
+    life: int
+    goal: int
+    item: int
+    elapsed: NonNegativeInt
+    score: int
+    kills: int
