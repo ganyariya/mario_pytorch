@@ -5,7 +5,11 @@ import gym
 import numpy as np
 
 from mario_pytorch.util.config import RewardConfig
-from mario_pytorch.wrappers.custom.custom_info_model import InfoModel, DiffInfoModel
+from mario_pytorch.wrappers.custom.custom_info_model import (
+    InfoModel,
+    DiffInfoModel,
+    RewardInfoModel,
+)
 
 STATUS_TO_INT: Final[Dict[str, int]] = {
     "small": 0,
@@ -101,7 +105,7 @@ class CustomRewardEnv(gym.Wrapper):
         diff_info_model = self.get_diff_info_model(info_model)
 
         # カスタム報酬と内訳を計算する
-        custom_reward, custom_reward_info = self.process_reward(diff_info_model)
+        custom_reward, custom_reward_info_model = self.process_reward(diff_info_model)
 
         # 差分用変数を更新する
         self.update_pprev(info_model)
@@ -116,7 +120,7 @@ class CustomRewardEnv(gym.Wrapper):
             {
                 "default": info,
                 "diff_info": diff_info_model,
-                "custom_reward_info": custom_reward_info,
+                "custom_reward_info": custom_reward_info_model,
                 "playlog": self.playlog,
             },
         )
@@ -292,7 +296,9 @@ class CustomRewardEnv(gym.Wrapper):
     # * process
     # *--------------------------------------------*
 
-    def process_reward(self, diff_info_model: DiffInfoModel) -> Tuple[int, Dict]:
+    def process_reward(
+        self, diff_info_model: DiffInfoModel
+    ) -> Tuple[int, RewardInfoModel]:
         x_pos = self.process_reward_x(diff_info_model)
         coins = self.process_reward_coin(diff_info_model)
         life = self.process_reward_life(diff_info_model)
@@ -302,17 +308,19 @@ class CustomRewardEnv(gym.Wrapper):
         score = self.process_reward_score(diff_info_model)
         kills = self.process_reward_kills(diff_info_model)
         reward = x_pos + coins + life + goal + item + elapsed + score + kills
-        reward_dict = {
-            "x_pos": x_pos,
-            "coins": coins,
-            "life": life,
-            "goal": goal,
-            "item": item,
-            "elapsed": elapsed,
-            "score": score,
-            "kills": kills,
-        }
-        return reward, reward_dict
+        reward_info_model = RewardInfoModel(
+            **{
+                "x_pos": x_pos,
+                "coins": coins,
+                "life": life,
+                "goal": goal,
+                "item": item,
+                "elapsed": elapsed,
+                "score": score,
+                "kills": kills,
+            }
+        )
+        return reward, reward_info_model
 
     def process_reward_x(self, diff_info_model: DiffInfoModel) -> int:
         return diff_info_model.x_pos * self.__reward_config.POSITION

@@ -64,3 +64,14 @@ class DiffInfoModel(BaseModel):
                 "kills": 0,
             }
         )
+
+
+class RewardInfoModel(BaseModel):
+    x_pos: int
+    coins: int
+    life: int
+    goal: int
+    item: int
+    elapsed: int
+    score: int
+    kills: int

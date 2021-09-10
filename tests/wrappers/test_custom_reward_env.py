@@ -19,16 +19,16 @@ def test_process_reward(make_env: CustomRewardEnv):
         "kills": 8,
     }
     diff_info_model = DiffInfoModel.create(diff_info)
-    reward, reward_dict = make_env.process_reward(diff_info_model)
+    reward, reward_info_model = make_env.process_reward(diff_info_model)
     assert reward == 36
-    assert reward_dict["x_pos"] == 1
-    assert reward_dict["coins"] == 2
-    assert reward_dict["life"] == 3
-    assert reward_dict["goal"] == 4
-    assert reward_dict["item"] == 5
-    assert reward_dict["elapsed"] == 6
-    assert reward_dict["score"] == 7
-    assert reward_dict["kills"] == 8
+    assert reward_info_model.x_pos == 1
+    assert reward_info_model.coins == 2
+    assert reward_info_model.life == 3
+    assert reward_info_model.goal == 4
+    assert reward_info_model.item == 5
+    assert reward_info_model.elapsed == 6
+    assert reward_info_model.score == 7
+    assert reward_info_model.kills == 8
 
 
 # *--------------------------------------------*
