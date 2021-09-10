@@ -9,6 +9,7 @@ from mario_pytorch.wrappers.custom.custom_info_model import (
     InfoModel,
     DiffInfoModel,
     RewardInfoModel,
+    PlayLogModel,
 )
 
 STATUS_TO_INT: Final[Dict[str, int]] = {
@@ -17,26 +18,6 @@ STATUS_TO_INT: Final[Dict[str, int]] = {
     "fireball": 2,
 }
 logger = getLogger(__name__)
-
-
-def initPlayLog() -> Dict:
-    return {
-        "x_pos": 0,
-        "x_abs": 0,
-        "x_plus": 0,
-        "x_minus": 0,
-        "coins": 0,
-        "life": 0,
-        "life_plus": 0,
-        "life_minus": 0,
-        "goal": 0,
-        "item": 0,
-        "item_plus": 0,
-        "item_minus": 0,
-        "elapsed": 0,
-        "score": 0,
-        "kills": 0,
-    }
 
 
 # https://zakopilo.hatenablog.jp/entry/2021/01/30/214806
@@ -65,7 +46,7 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_score = 0
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
-        self.playlog = initPlayLog()
+        self.playlog = PlayLogModel.init()
 
     def reset(self, **kwargs) -> np.ndarray:
         self.env.reset(**kwargs)
@@ -81,9 +62,9 @@ class CustomRewardEnv(gym.Wrapper):
         self.pprev_kills = 0
         self.pprev_status = STATUS_TO_INT["small"]
 
-        self.playlog = initPlayLog()
-        self.playlog["x_pos"] = info_model.x_pos
-        self.playlog["life"] = info_model.life
+        self.playlog = PlayLogModel.init()
+        self.playlog.x_pos = info_model.x_pos
+        self.playlog.life = info_model.life
 
         return self.__prev_state
 
@@ -163,41 +144,41 @@ class CustomRewardEnv(gym.Wrapper):
     def accumulate_x(
         self, info_model: InfoModel, diff_info_model: DiffInfoModel
     ) -> None:
-        self.playlog["x_pos"] = info_model.x_pos
-        self.playlog["x_abs"] += abs(diff_info_model.x_pos)
+        self.playlog.x_pos = info_model.x_pos
+        self.playlog.x_abs += abs(diff_info_model.x_pos)
         if diff_info_model.x_pos > 0:
-            self.playlog["x_plus"] += diff_info_model.x_pos
+            self.playlog.x_plus += diff_info_model.x_pos
         if diff_info_model.x_pos < 0:
-            self.playlog["x_minus"] += diff_info_model.x_pos
+            self.playlog.x_minus += diff_info_model.x_pos
 
     def accumulate_coins(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["coins"] += diff_info_model.coins
+        self.playlog.coins += diff_info_model.coins
 
     def accumulate_kills(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["kills"] += diff_info_model.kills
+        self.playlog.kills += diff_info_model.kills
 
     def accumulate_life(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["life"] += diff_info_model.life
+        self.playlog.life += diff_info_model.life
         if diff_info_model.life > 0:
-            self.playlog["life_plus"] += diff_info_model.life
+            self.playlog.life_plus += diff_info_model.life
         if diff_info_model.life < 0:
-            self.playlog["life_minus"] += diff_info_model.life
+            self.playlog.life_minus += diff_info_model.life
 
     def accumulate_goal(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["goal"] += diff_info_model.goal
+        self.playlog.goal += diff_info_model.goal
 
     def accumulate_item(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["item"] += diff_info_model.item
+        self.playlog.item += diff_info_model.item
         if diff_info_model.item > 0:
-            self.playlog["item_plus"] += diff_info_model.item
+            self.playlog.item_plus += diff_info_model.item
         if diff_info_model.item < 0:
-            self.playlog["item_minus"] += diff_info_model.item
+            self.playlog.item_minus += diff_info_model.item
 
     def accumulate_elapsed(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["elapsed"] += abs(diff_info_model.elapsed)
+        self.playlog.elapsed += abs(diff_info_model.elapsed)
 
     def accumulate_score(self, diff_info_model: DiffInfoModel) -> None:
-        self.playlog["score"] += diff_info_model.score
+        self.playlog.score += diff_info_model.score
 
     # *--------------------------------------------*
     # * update

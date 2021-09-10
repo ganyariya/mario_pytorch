@@ -75,3 +75,43 @@ class RewardInfoModel(BaseModel):
     elapsed: int
     score: int
     kills: int
+
+
+class PlayLogModel(BaseModel):
+    x_pos: int
+    x_abs: int
+    x_plus: int
+    x_minus: int
+    coins: int
+    life: int
+    life_plus: int
+    life_minus: int
+    goal: int
+    item: int
+    item_plus: int
+    item_minus: int
+    elapsed: int
+    score: int
+    kills: int
+
+    @staticmethod
+    def init() -> PlayLogModel:
+        return PlayLogModel(
+            **{
+                "x_pos": 0,
+                "x_abs": 0,
+                "x_plus": 0,
+                "x_minus": 0,
+                "coins": 0,
+                "life": 0,
+                "life_plus": 0,
+                "life_minus": 0,
+                "goal": 0,
+                "item": 0,
+                "item_plus": 0,
+                "item_minus": 0,
+                "elapsed": 0,
+                "score": 0,
+                "kills": 0,
+            }
+        )
