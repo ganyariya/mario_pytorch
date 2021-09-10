@@ -1,8 +1,6 @@
 from mario_pytorch.play import play
-from mario_pytorch.util.decorators import (
-    argument_print_decorator,
-    time_measurement_decorator,
-)
+from mario_pytorch.util.decorators import (argument_print_decorator,
+                                           time_measurement_decorator)
 
 
 @time_measurement_decorator

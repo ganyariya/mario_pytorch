@@ -1,16 +1,14 @@
-from typing import Tuple, Dict, Final
 from logging import getLogger
+from typing import Dict, Final, Tuple
 
 import gym
 import numpy as np
 
 from mario_pytorch.util.config import RewardConfig
-from mario_pytorch.wrappers.custom.custom_info_model import (
-    InfoModel,
-    DiffInfoModel,
-    RewardInfoModel,
-    PlayLogModel,
-)
+from mario_pytorch.wrappers.custom.custom_info_model import (DiffInfoModel,
+                                                             InfoModel,
+                                                             PlayLogModel,
+                                                             RewardInfoModel)
 
 STATUS_TO_INT: Final[Dict[str, int]] = {
     "small": 0,
