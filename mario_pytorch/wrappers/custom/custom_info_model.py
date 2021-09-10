@@ -19,3 +19,18 @@ class InfoModel(BaseModel):
         info["x_pos"] = info["x_pos"].item()
         info["life"] = info["life"].item()
         return InfoModel(**info)
+
+    @staticmethod
+    def init() -> InfoModel:
+        return InfoModel(
+            **{
+                "x_pos": 0,
+                "coins": 0,
+                "life": 2,
+                "flag_get": False,
+                "status": "small",
+                "time": 400,
+                "score": 0,
+                "kills": 0,
+            }
+        )
