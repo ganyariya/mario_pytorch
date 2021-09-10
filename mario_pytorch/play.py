@@ -9,10 +9,13 @@ import torch
 from mario_pytorch.agent.mario import LearnedMario
 from mario_pytorch.util.config import EnvConfig, RewardConfig
 from mario_pytorch.util.get_env import get_env
-from mario_pytorch.util.process_path import (get_checkpoint_path,
-                                             get_date_path,
-                                             get_env_config_path,
-                                             get_model_path, get_results_path)
+from mario_pytorch.util.process_path import (
+    get_checkpoint_path,
+    get_date_path,
+    get_env_config_path,
+    get_model_path,
+    get_results_path,
+)
 
 
 def tmp_create_reward_config() -> RewardConfig:

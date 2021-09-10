@@ -5,10 +5,12 @@ import gym
 import numpy as np
 
 from mario_pytorch.util.config import RewardConfig
-from mario_pytorch.wrappers.custom.custom_info_model import (DiffInfoModel,
-                                                             InfoModel,
-                                                             PlayLogModel,
-                                                             RewardInfoModel)
+from mario_pytorch.wrappers.custom.custom_info_model import (
+    DiffInfoModel,
+    InfoModel,
+    PlayLogModel,
+    RewardInfoModel,
+)
 
 STATUS_TO_INT: Final[Dict[str, int]] = {
     "small": 0,

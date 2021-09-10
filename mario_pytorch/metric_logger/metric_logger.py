@@ -1,7 +1,14 @@
 import datetime
 import time
-from logging import (INFO, WARNING, FileHandler, Formatter, Logger,
-                     StreamHandler, getLogger)
+from logging import (
+    INFO,
+    WARNING,
+    FileHandler,
+    Formatter,
+    Logger,
+    StreamHandler,
+    getLogger,
+)
 from pathlib import Path
 from typing import Final, List
 

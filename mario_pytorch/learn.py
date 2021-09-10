@@ -6,15 +6,17 @@ import time
 
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
-from mario_pytorch.util.config import (EnvConfig, RewardConfig,
-                                       RewardScopeConfig)
+from mario_pytorch.util.config import EnvConfig, RewardConfig, RewardScopeConfig
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
-from mario_pytorch.util.process_path import (copy_and_save_env_files,
-                                             generate_README_file,
-                                             get_checkpoint_path,
-                                             get_env_config_path,
-                                             get_results_path, get_save_path)
+from mario_pytorch.util.process_path import (
+    copy_and_save_env_files,
+    generate_README_file,
+    get_checkpoint_path,
+    get_env_config_path,
+    get_results_path,
+    get_save_path,
+)
 
 
 def tmp_create_reward_config() -> RewardConfig:
