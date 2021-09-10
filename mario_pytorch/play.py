@@ -3,18 +3,18 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 https://github.com/YuansongFeng/MadMario/blob/master/agent.py
 """
 import time
+
 import torch
 
 from mario_pytorch.agent.mario import LearnedMario
 from mario_pytorch.util.config import EnvConfig, RewardConfig
 from mario_pytorch.util.get_env import get_env
-
 from mario_pytorch.util.process_path import (
-    get_env_config_path,
-    get_results_path,
     get_checkpoint_path,
     get_date_path,
+    get_env_config_path,
     get_model_path,
+    get_results_path,
 )
 
 
@@ -79,7 +79,7 @@ def play(
             # print(info["playlog"])
             # time.sleep(0.1)
 
-            if done or info["default"]["flag_get"]:
+            if done or info["default"].flag_get:
                 break
 
         print(reward_sum)
