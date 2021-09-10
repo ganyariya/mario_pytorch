@@ -45,3 +45,22 @@ class DiffInfoModel(BaseModel):
     elapsed: NonNegativeInt
     score: int
     kills: int
+
+    @staticmethod
+    def create(diff_info: Dict) -> DiffInfoModel:
+        return DiffInfoModel(**diff_info)
+
+    @staticmethod
+    def init() -> DiffInfoModel:
+        return DiffInfoModel(
+            **{
+                "x_pos": 0,
+                "coins": 0,
+                "life": 0,
+                "goal": 0,
+                "item": 0,
+                "elapsed": 0,
+                "score": 0,
+                "kills": 0,
+            }
+        )
