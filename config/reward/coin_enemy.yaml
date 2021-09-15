@@ -1,0 +1,15 @@
+ENEMY:
+  MIN: -100
+  MAX: 100
+  USE: true
+COIN:
+  MIN: -100
+  MAX: 100
+  USE: true
+
+POSITION:
+GOAL:
+LIFE:
+ITEM:
+TIME:
+SCORE:

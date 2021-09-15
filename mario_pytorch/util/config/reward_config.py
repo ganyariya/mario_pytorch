@@ -16,8 +16,8 @@ class RewardConfig(BaseModel):
 
 
 class RewardScope(BaseModel):
-    MIN: int
-    MAX: int
+    MIN: int = -100
+    MAX: int = 100
     USE: bool = False
 
 
