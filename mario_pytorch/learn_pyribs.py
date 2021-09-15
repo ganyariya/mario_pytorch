@@ -1,3 +1,7 @@
+from ribs.archives import GridArchive
+from ribs.emitters import ImprovementEmitter
+from ribs.optimizers import Optimizer
+
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
 from mario_pytorch.util.config import (
@@ -47,9 +51,18 @@ def learn_pyribs(
     reward_scope_config = RewardScopeConfig.create(str(reward_scope_config_path))
     playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
     playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
-    print(reward_scope_config)
-    print(playlog_scope_config)
-    exit(0)
+
+    ranges, bins, keys = PlayLogScopeConfig.take_out_use(playlog_scope_config)
+    archive = GridArchive(dims=bins, ranges=ranges)
+    print(f"keys:{keys} ranges: {ranges} bins: {bins}")
+
+    bounds, keys = RewardScopeConfig.take_out_use(reward_scope_config)
+    emitters = [
+        ImprovementEmitter(archive, x0=[0] * len(bounds), sigma0=1, bounds=bounds)
+    ]
+    print(f"keys:{keys} bounds:{bounds}")
+
+    exit()
 
     reward_config = tmp_create_reward_config()
 

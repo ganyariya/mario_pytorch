@@ -40,3 +40,14 @@ class RewardScopeConfig(BaseModel):
     def create(path: str) -> RewardScopeConfig:
         with open(path, "r") as f:
             return RewardScopeConfig(**yaml.safe_load(f))
+
+    @staticmethod
+    def take_out_use(
+        config: RewardScopeConfig,
+    ) -> tuple[list[tuple[int, int]], list[str]]:
+        bounds, keys = [], []
+        for k, v in config:
+            if v.USE:
+                bounds.append((v.MIN, v.MAX))
+                keys.append(k)
+        return bounds, keys

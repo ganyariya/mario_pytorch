@@ -32,3 +32,15 @@ class PlayLogScopeConfig(BaseModel):
     def create(path: str) -> PlayLogScopeConfig:
         with open(path, "r") as f:
             return PlayLogScopeConfig(**yaml.safe_load(f))
+
+    @staticmethod
+    def take_out_use(
+        config: PlayLogScopeConfig,
+    ) -> tuple[list[tuple[int, int]], list[int], list[str]]:
+        ranges, bins, keys = [], [], []
+        for k, v in config:
+            if v.USE:
+                ranges.append((v.MIN, v.MAX))
+                bins.append(v.BIN)
+                keys.append(k)
+        return ranges, bins, keys
