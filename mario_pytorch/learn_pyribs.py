@@ -8,6 +8,8 @@ from mario_pytorch.util.process_path import (
     generate_README_file,
     get_checkpoint_path,
     get_env_config_path,
+    get_reward_scope_config_path,
+    get_playlog_scope_config_path,
     get_results_path,
     get_save_path,
 )
@@ -31,9 +33,14 @@ def tmp_create_reward_config() -> RewardConfig:
 # ----------------------------------------------------------------------
 
 
-def learn(env_config_name: str, reward_scope_config_name: str) -> None:
+def learn_pyribs(
+    env_config_name: str, reward_scope_config_name: str, playlog_scope_config_name: str
+) -> None:
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
+    reward_scope_config_path = get_reward_scope_config_path(reward_scope_config_name)
+    playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
+
     reward_config = tmp_create_reward_config()
 
     results_path = get_results_path()

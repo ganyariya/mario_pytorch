@@ -14,6 +14,10 @@ def get_reward_scope_config_path(reward_scope_config_name: str) -> Path:
     return Path(__file__).parents[2] / "config" / "reward" / reward_scope_config_name
 
 
+def get_playlog_scope_config_path(playlog_scope_config_name: str) -> Path:
+    return Path(__file__).parents[2] / "config" / "playlog" / playlog_scope_config_name
+
+
 def get_results_path() -> Path:
     results_path = Path(__file__).parents[2] / "results"
     results_path.mkdir(parents=True, exist_ok=True)

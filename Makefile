@@ -8,6 +8,11 @@ exploration_rate=0.9
 learn: ## config_name
 	python -m mario_pytorch.cli learn ${config_name} ${config_name}
 
+.PHONY: learn_pyribs
+learn_pyribs: ## config_name
+	python -m mario_pytorch.cli learn-pyribs ${config_name} ${config_name} ${config_name}
+
+
 .PHONY: play
 play: ## config_name date_str checkpoint_idx exploration_rate
 	python -m mario_pytorch.cli play ${config_name} ${config_name} ${date_str} ${checkpoint_idx} ${exploration_rate}
