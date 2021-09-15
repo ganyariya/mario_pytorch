@@ -38,7 +38,7 @@ def get_playlog_path(save_path: Path) -> Path:
     return playlog_path
 
 
-def copy_and_save_env_files(
+def copy_and_backup_env_files(
     save_path: Path, env_config: EnvConfig, reward_config: RewardConfig
 ) -> None:
     with open(save_path / "env_config.yaml", "w") as f:

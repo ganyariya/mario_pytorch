@@ -10,7 +10,7 @@ from mario_pytorch.util.config import EnvConfig, RewardConfig, RewardScopeConfig
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (
-    copy_and_save_env_files,
+    copy_and_backup_env_files,
     generate_README_file,
     get_checkpoint_path,
     get_env_config_path,
@@ -45,7 +45,7 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
     results_path = get_results_path()
     save_path = get_save_path(results_path)
     checkpoint_path = get_checkpoint_path(save_path)
-    copy_and_save_env_files(save_path, env_config, reward_config)
+    copy_and_backup_env_files(save_path, env_config, reward_config)
     generate_README_file(save_path)
 
     env = get_env(env_config, reward_config)
@@ -77,7 +77,7 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
 
             state = next_state
 
-            if done or info["default"]["flag_get"]:
+            if done or info["default"].flag_get:
                 break
 
         logger.log_episode()
