@@ -1,6 +1,11 @@
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
-from mario_pytorch.util.config import EnvConfig, RewardConfig
+from mario_pytorch.util.config import (
+    EnvConfig,
+    RewardConfig,
+    RewardScopeConfig,
+    PlayLogScopeConfig,
+)
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (
@@ -39,7 +44,12 @@ def learn_pyribs(
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
     reward_scope_config_path = get_reward_scope_config_path(reward_scope_config_name)
+    reward_scope_config = RewardScopeConfig.create(str(reward_scope_config_path))
     playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
+    playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
+    print(reward_scope_config)
+    print(playlog_scope_config)
+    exit(0)
 
     reward_config = tmp_create_reward_config()
 

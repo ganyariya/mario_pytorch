@@ -8,8 +8,14 @@ COIN:
   USE: true
 
 POSITION:
+  USE: false
 GOAL:
+  USE: false
 LIFE:
+  USE: false
 ITEM:
+  USE: false
 TIME:
+  USE: false
 SCORE:
+  USE: false

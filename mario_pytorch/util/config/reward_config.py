@@ -14,6 +14,11 @@ class RewardConfig(BaseModel):
     TIME: int
     SCORE: int
 
+    @staticmethod
+    def create(path: str) -> RewardConfig:
+        with open(path, "r") as f:
+            return RewardConfig(**yaml.safe_load(f))
+
 
 class RewardScope(BaseModel):
     MIN: int = -100
