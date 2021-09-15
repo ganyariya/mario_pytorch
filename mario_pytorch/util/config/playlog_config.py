@@ -4,9 +4,9 @@ from pydantic import BaseModel
 
 
 class PlayLogScope(BaseModel):
-    MIN: int
-    MAX: int
-    BIN: int
+    MIN: int = 0
+    MAX: int = 0
+    BIN: int = 20
     USE: bool = False
 
 
