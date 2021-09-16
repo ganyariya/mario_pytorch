@@ -1,3 +1,4 @@
+import numpy as np
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
@@ -42,6 +43,31 @@ def tmp_create_reward_config() -> RewardConfig:
 # ----------------------------------------------------------------------
 
 
+def simulate(solutions: np.ndarray) -> np.ndarray:
+    """報酬重み（パラメータ）をもとにマリオをプレイさせる.
+
+    Attributes
+    ----------
+    solutions: np.ndarray
+        報酬重みのパラメータ (n, d)
+        n はデータ数  d は重みの数
+
+    Returns
+    -------
+    objectives: np.ndarray
+        適応度 (n,)
+    behaviors: np.ndarray
+        特徴量（プレイログ） (n, r)  rはプレイログの要素の個数
+        おそらくプレイログ空間作ったときの順番で入れる必要がある
+
+    Notes
+    -----
+    behaviors は入れるかわからん
+    ただ，多分入れたほうがらくな感じする
+    """
+    pass
+
+
 def learn_pyribs(
     env_config_name: str, reward_scope_config_name: str, playlog_scope_config_name: str
 ) -> None:
@@ -52,15 +78,33 @@ def learn_pyribs(
     playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
     playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
 
-    ranges, bins, keys = PlayLogScopeConfig.take_out_use(playlog_scope_config)
-    archive = GridArchive(dims=bins, ranges=ranges)
-    print(f"keys:{keys} ranges: {ranges} bins: {bins}")
+    # 行動空間
+    playlog_ranges, playlog_bins, playlog_keys = PlayLogScopeConfig.take_out_use(
+        playlog_scope_config
+    )
+    archive = GridArchive(dims=playlog_bins, ranges=playlog_ranges)
+    print(
+        f"[PLAYLOG] keys:{playlog_keys} ranges: {playlog_ranges} bins: {playlog_bins}"
+    )
 
-    bounds, keys = RewardScopeConfig.take_out_use(reward_scope_config)
+    # パラメータ空間
+    reward_bounds, reward_keys = RewardScopeConfig.take_out_use(reward_scope_config)
     emitters = [
-        ImprovementEmitter(archive, x0=[0] * len(bounds), sigma0=1, bounds=bounds)
+        ImprovementEmitter(
+            archive, x0=[0] * len(reward_bounds), sigma0=1, bounds=reward_bounds
+        )
     ]
-    print(f"keys:{keys} bounds:{bounds}")
+    print(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")
+
+    optimizer = Optimizer(archive=archive, emitters=emitters)
+
+    for _ in range(2):
+        # パラメータ(報酬重み)空間 (データ数, 重み要素)
+        solutions = optimizer.ask()
+        print(solutions.shape)
+        print(solutions)
+
+        objectives = simulate(solutions)
 
     exit()
 
