@@ -70,7 +70,10 @@ class CustomRewardEnv(gym.Wrapper):
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
         self.__reward_config = reward_config
-        logger.info(f"[CHANGED] {reward_config}")
+        logger.info(f"[CHANGED] {self.__reward_config}")
+
+    def confirm_reward_config(self) -> None:
+        print(self.__reward_config)
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)

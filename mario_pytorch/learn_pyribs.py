@@ -1,4 +1,6 @@
+from typing import Callable
 import numpy as np
+
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
@@ -23,6 +25,8 @@ from mario_pytorch.util.process_path import (
     get_results_path,
     get_save_path,
 )
+from mario_pytorch.wrappers.custom import CustomRewardEnv
+from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
 
 
 def tmp_create_reward_config() -> RewardConfig:
@@ -43,7 +47,13 @@ def tmp_create_reward_config() -> RewardConfig:
 # ----------------------------------------------------------------------
 
 
-def simulate(solutions: np.ndarray) -> np.ndarray:
+def simulate(
+    env: CustomRewardEnv,
+    train_on_custom_reward: Callable[[CustomRewardEnv], PlayLogModel],
+    solutions: np.ndarray,
+    reward_keys: list[str],
+    playlog_keys: list[str],
+) -> np.ndarray:
     """報酬重み（パラメータ）をもとにマリオをプレイさせる.
 
     Attributes
@@ -51,6 +61,10 @@ def simulate(solutions: np.ndarray) -> np.ndarray:
     solutions: np.ndarray
         報酬重みのパラメータ (n, d)
         n はデータ数  d は重みの数
+    reward_keys: list[str]
+        利用する報酬重みの key リスト
+    playlog_keys: list[str]
+        利用するプレイログの key リスト
 
     Returns
     -------
@@ -63,20 +77,70 @@ def simulate(solutions: np.ndarray) -> np.ndarray:
     Notes
     -----
     behaviors は入れるかわからん
-    ただ，多分入れたほうがらくな感じする
+    ただ，多分入れたほうが楽な感じする
     """
-    pass
+    for parameter in solutions:
+        reward_config = RewardConfig.init_with_keys(parameter, reward_keys)
+        env.change_reward_config(reward_config)
+        env.confirm_reward_config()
+        train_on_custom_reward(env)
+
+
+def get_train_on_custom_reward(
+    env_config: EnvConfig, mario: Mario, logger: MetricLogger
+) -> Callable[[CustomRewardEnv], PlayLogModel]:
+    def callback(env: CustomRewardEnv) -> PlayLogModel:
+        # TODO: ログ出力の内容を調整する
+        for e in range(env_config.EPISODES):
+            state = env.reset()
+
+            while True:
+                action = mario.act(state)
+                if env_config.IS_RENDER and e % env_config.EVERY_RENDER == 0:
+                    env.render()
+
+                next_state, reward, done, info = env.step(action)
+
+                mario.cache(state, next_state, action, reward, done)
+                q, loss = mario.learn()
+
+                logger.log_step(reward, loss, q)
+
+                state = next_state
+
+                if done or info["default"].flag_get:
+                    break
+
+            # TODO: このあたりもうまく調整する
+            logger.log_episode()
+            if e % env_config.EVERY_RECORD == 0:
+                logger.record(
+                    episode=e, epsilon=mario.exploration_rate, step=mario.curr_step
+                )
+
+        return info["playlog"]
+
+    return callback
 
 
 def learn_pyribs(
     env_config_name: str, reward_scope_config_name: str, playlog_scope_config_name: str
 ) -> None:
+    # パス・設定ファイル
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
     reward_scope_config_path = get_reward_scope_config_path(reward_scope_config_name)
     reward_scope_config = RewardScopeConfig.create(str(reward_scope_config_path))
     playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
     playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
+
+    results_path = get_results_path()
+    save_path = get_save_path(results_path)
+    checkpoint_path = get_checkpoint_path(save_path)
+    copy_and_backup_env_files(
+        save_path, env_config, reward_scope_config, playlog_scope_config
+    )
+    generate_README_file(save_path)
 
     # 行動空間
     playlog_ranges, playlog_bins, playlog_keys = PlayLogScopeConfig.take_out_use(
@@ -98,58 +162,22 @@ def learn_pyribs(
 
     optimizer = Optimizer(archive=archive, emitters=emitters)
 
-    for _ in range(2):
-        # パラメータ(報酬重み)空間 (データ数, 重み要素)
-        solutions = optimizer.ask()
-        print(solutions.shape)
-        print(solutions)
-
-        objectives = simulate(solutions)
-
-    exit()
-
-    reward_config = tmp_create_reward_config()
-
-    results_path = get_results_path()
-    save_path = get_save_path(results_path)
-    checkpoint_path = get_checkpoint_path(save_path)
-    copy_and_backup_env_files(save_path, env_config, reward_config)
-    generate_README_file(save_path)
-
-    env = get_env(env_config, reward_config)
-    logger = MetricLogger(save_path)
+    env = get_env(env_config, RewardConfig.init())
     mario = Mario(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
         action_dim=env.action_space.n,
         checkpoint_path=checkpoint_path,
     )
     export_onnx(mario.online_net, env.reset(), transform_mario_input, save_path)
+    logger = MetricLogger(save_path)
+    train_on_custom_reward = get_train_on_custom_reward(env_config, mario, logger)
 
-    for e in range(env_config.EPISODES):
+    for _ in range(2):
+        # パラメータ(報酬重み)空間 (データ数, 重み要素)
+        solutions = optimizer.ask()
+        print(solutions.shape)
+        print(solutions)
 
-        # state.shape (4, 84, 84)
-        # state.frame_shape (84, 84)
-        state = env.reset()
-
-        while True:
-            action = mario.act(state)
-            if env_config.IS_RENDER and e % env_config.EVERY_RENDER == 0:
-                env.render()
-
-            next_state, reward, done, info = env.step(action)
-
-            mario.cache(state, next_state, action, reward, done)
-            q, loss = mario.learn()
-
-            logger.log_step(reward, loss, q)
-
-            state = next_state
-
-            if done or info["default"].flag_get:
-                break
-
-        logger.log_episode()
-        if e % env_config.EVERY_RECORD == 0:
-            logger.record(
-                episode=e, epsilon=mario.exploration_rate, step=mario.curr_step
-            )
+        objectives = simulate(
+            env, train_on_custom_reward, solutions, reward_keys, playlog_keys
+        )
