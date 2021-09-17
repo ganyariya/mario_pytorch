@@ -83,7 +83,7 @@ def simulate(
         reward_config = RewardConfig.init_with_keys(parameter, reward_keys)
         env.change_reward_config(reward_config)
         env.confirm_reward_config()
-        train_on_custom_reward(env)
+        playlog = train_on_custom_reward(env)
 
 
 def get_train_on_custom_reward(
