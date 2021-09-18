@@ -1,0 +1,16 @@
+WORLD: -1
+STAGE: -1
+VERSION: 0
+
+SHAPE: 84
+SKIP_FRAME: 4
+NUM_STACK: 4
+
+IS_RENDER: false
+EPISODES: 1
+EVERY_RECORD: 50
+EVERY_RENDER: 1
+
+INTENTION: |-
+  コインとエネミーで pyribs を試す．（pyribs がうまく動くかどうか）
+  x に関してはどうしようかな

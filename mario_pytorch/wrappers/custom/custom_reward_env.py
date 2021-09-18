@@ -70,7 +70,10 @@ class CustomRewardEnv(gym.Wrapper):
 
     def change_reward_config(self, reward_config: RewardConfig) -> None:
         self.__reward_config = reward_config
-        logger.info(f"[CHANGED] {reward_config}")
+        logger.info(f"[CHANGED] {self.__reward_config}")
+
+    def confirm_reward_config(self) -> None:
+        print(self.__reward_config)
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, dict]:
         state, reward, done, info = self.env.step(action)
@@ -149,7 +152,7 @@ class CustomRewardEnv(gym.Wrapper):
         if diff_info_model.x_pos > 0:
             self.playlog.x_plus += diff_info_model.x_pos
         if diff_info_model.x_pos < 0:
-            self.playlog.x_minus += diff_info_model.x_pos
+            self.playlog.x_minus += abs(diff_info_model.x_pos)
 
     def accumulate_coins(self, diff_info_model: DiffInfoModel) -> None:
         self.playlog.coins += diff_info_model.coins
@@ -162,7 +165,7 @@ class CustomRewardEnv(gym.Wrapper):
         if diff_info_model.life > 0:
             self.playlog.life_plus += diff_info_model.life
         if diff_info_model.life < 0:
-            self.playlog.life_minus += diff_info_model.life
+            self.playlog.life_minus += abs(diff_info_model.life)
 
     def accumulate_goal(self, diff_info_model: DiffInfoModel) -> None:
         self.playlog.goal += diff_info_model.goal
@@ -172,7 +175,7 @@ class CustomRewardEnv(gym.Wrapper):
         if diff_info_model.item > 0:
             self.playlog.item_plus += diff_info_model.item
         if diff_info_model.item < 0:
-            self.playlog.item_minus += diff_info_model.item
+            self.playlog.item_minus += abs(diff_info_model.item)
 
     def accumulate_elapsed(self, diff_info_model: DiffInfoModel) -> None:
         self.playlog.elapsed += abs(diff_info_model.elapsed)

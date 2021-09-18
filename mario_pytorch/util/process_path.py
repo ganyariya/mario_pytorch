@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from mario_pytorch.util.config import EnvConfig, RewardConfig
+from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, PlayLogScopeConfig
 
 
 def get_env_config_path(env_config_name: str) -> Path:
@@ -12,6 +12,10 @@ def get_env_config_path(env_config_name: str) -> Path:
 
 def get_reward_scope_config_path(reward_scope_config_name: str) -> Path:
     return Path(__file__).parents[2] / "config" / "reward" / reward_scope_config_name
+
+
+def get_playlog_scope_config_path(playlog_scope_config_name: str) -> Path:
+    return Path(__file__).parents[2] / "config" / "playlog" / playlog_scope_config_name
 
 
 def get_results_path() -> Path:
@@ -39,12 +43,21 @@ def get_playlog_path(save_path: Path) -> Path:
 
 
 def copy_and_backup_env_files(
-    save_path: Path, env_config: EnvConfig, reward_config: RewardConfig
+    save_path: Path,
+    env_config: EnvConfig,
+    reward_scope_config: RewardScopeConfig,
+    playlog_scope_config: PlayLogScopeConfig,
 ) -> None:
     with open(save_path / "env_config.yaml", "w") as f:
         yaml.safe_dump(env_config.dict(), f, encoding="utf-8", allow_unicode=True)
-    with open(save_path / "reward_config.yaml", "w") as f:
-        yaml.safe_dump(reward_config.dict(), f, encoding="utf-8", allow_unicode=True)
+    with open(save_path / "reward_scope_config.yaml", "w") as f:
+        yaml.safe_dump(
+            reward_scope_config.dict(), f, encoding="utf-8", allow_unicode=True
+        )
+    with open(save_path / "playlog_scope_config.yaml", "w") as f:
+        yaml.safe_dump(
+            playlog_scope_config.dict(), f, encoding="utf-8", allow_unicode=True
+        )
 
 
 def generate_README_file(save_path: Path) -> None:

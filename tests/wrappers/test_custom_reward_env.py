@@ -243,7 +243,7 @@ def test_accumulate_x(make_env: CustomRewardEnv):
     assert make_env.playlog.x_pos == 20
     assert make_env.playlog.x_abs == 20
     assert make_env.playlog.x_plus == 20
-    assert make_env.playlog.x_minus == 00
+    assert make_env.playlog.x_minus == 0
 
     info_model.x_pos = 10
     diff_info_model.x_pos = -10
@@ -252,7 +252,7 @@ def test_accumulate_x(make_env: CustomRewardEnv):
     assert make_env.playlog.x_pos == 10
     assert make_env.playlog.x_abs == 30
     assert make_env.playlog.x_plus == 20
-    assert make_env.playlog.x_minus == -10
+    assert make_env.playlog.x_minus == 10
 
     info_model.x_pos = 50
     diff_info_model.x_pos = 40
@@ -261,7 +261,7 @@ def test_accumulate_x(make_env: CustomRewardEnv):
     assert make_env.playlog.x_pos == 50
     assert make_env.playlog.x_abs == 70
     assert make_env.playlog.x_plus == 60
-    assert make_env.playlog.x_minus == -10
+    assert make_env.playlog.x_minus == 10
 
     info_model.x_pos = 0
     diff_info_model.x_pos = -50
@@ -270,7 +270,7 @@ def test_accumulate_x(make_env: CustomRewardEnv):
     assert make_env.playlog.x_pos == 0
     assert make_env.playlog.x_abs == 120
     assert make_env.playlog.x_plus == 60
-    assert make_env.playlog.x_minus == -60
+    assert make_env.playlog.x_minus == 60
 
 
 def test_accumulate_coins(make_env: CustomRewardEnv):
@@ -305,19 +305,19 @@ def test_accumulate_life(make_env: CustomRewardEnv):
     make_env.accumulate_life(diff_info_model)
     assert make_env.playlog.life == 3
     assert make_env.playlog.life_plus == 5
-    assert make_env.playlog.life_minus == -2
+    assert make_env.playlog.life_minus == 2
 
     diff_info_model.life = 1
     make_env.accumulate_life(diff_info_model)
     assert make_env.playlog.life == 4
     assert make_env.playlog.life_plus == 6
-    assert make_env.playlog.life_minus == -2
+    assert make_env.playlog.life_minus == 2
 
     diff_info_model.life = -5
     make_env.accumulate_life(diff_info_model)
     assert make_env.playlog.life == -1
     assert make_env.playlog.life_plus == 6
-    assert make_env.playlog.life_minus == -7
+    assert make_env.playlog.life_minus == 7
 
 
 def test_accumulate_goal(make_env: CustomRewardEnv):
@@ -340,19 +340,19 @@ def test_accumulate_item(make_env: CustomRewardEnv):
     make_env.accumulate_item(diff_info_model)
     assert make_env.playlog.item == 1
     assert make_env.playlog.item_plus == 2
-    assert make_env.playlog.item_minus == -1
+    assert make_env.playlog.item_minus == 1
 
     diff_info_model.item = 1
     make_env.accumulate_item(diff_info_model)
     assert make_env.playlog.item == 2
     assert make_env.playlog.item_plus == 3
-    assert make_env.playlog.item_minus == -1
+    assert make_env.playlog.item_minus == 1
 
     diff_info_model.item = -3
     make_env.accumulate_item(diff_info_model)
     assert make_env.playlog.item == -1
     assert make_env.playlog.item_plus == 3
-    assert make_env.playlog.item_minus == -4
+    assert make_env.playlog.item_minus == 4
 
 
 def test_accumulate_elapsed(make_env: CustomRewardEnv):

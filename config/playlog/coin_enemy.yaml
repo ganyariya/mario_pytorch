@@ -1,0 +1,35 @@
+KILLS:
+  MAX: 50
+  BIN: 20
+  USE: true
+COINS:
+  MAX: 50
+  BIN: 20
+  USE: true
+
+X_POS:
+  USE: false
+X_ABS:
+  USE: false
+X_PLUS:
+  USE: false
+X_MINUS:
+  USE: false
+LIFE:
+  USE: false
+LIFE_PLUS:
+  USE: false
+LIFE_MINUS:
+  USE: false
+GOAL:
+  USE: false
+ITEM:
+  USE: false
+ITEM_PLUS:
+  USE: false
+ITEM_MINUS:
+  USE: false
+ELAPSED:
+  USE: false
+SCORE:
+  USE: false

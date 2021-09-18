@@ -6,7 +6,7 @@ import time
 
 from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
-from mario_pytorch.util.config import EnvConfig, RewardConfig, RewardScopeConfig
+from mario_pytorch.util.config import EnvConfig, RewardConfig
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (

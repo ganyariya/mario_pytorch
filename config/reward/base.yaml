@@ -16,7 +16,7 @@ LIFE:
 ITEM:
   MIN: -1
   MAX: 1
-TIME:
+TIME: # マイナスだとマリオが早くゴールを目指す
   MIN: -1
   MAX: 1
 SCORE:
