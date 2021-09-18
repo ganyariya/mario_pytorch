@@ -6,7 +6,7 @@
     "files.exclude": {
         "**/__pycache__": true,
         "**/__init__.pyc": true,
-        "**/runs": true,
+        // "**/runs": true,
         "**/.pytest_cache": true,
         "**/.idea": true,
         "**/.venv": true,

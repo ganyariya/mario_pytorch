@@ -243,7 +243,7 @@ def learn_pyribs(
         "playlog_keys": playlog_keys,
         "reward_keys": reward_keys,
     }
-    for _ in range(1):
+    for _ in range(10000000):
         # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
 
@@ -258,9 +258,9 @@ def learn_pyribs(
         )
         optimizer.tell(objectives, behaviors)
 
-    with open(pyribs_models_path / "archive.pickle", "wb") as f:
-        pickle.dump(archive, f)
-    with open(pyribs_models_path / "emitters.pickle", "wb") as f:
-        pickle.dump(emitters, f)
-    with open(pyribs_models_path / "optimzer.pickle", "wb") as f:
-        pickle.dump(optimizer, f)
+        with open(pyribs_models_path / "archive.pickle", "wb") as f:
+            pickle.dump(archive, f)
+        with open(pyribs_models_path / "emitters.pickle", "wb") as f:
+            pickle.dump(emitters, f)
+        with open(pyribs_models_path / "optimzer.pickle", "wb") as f:
+            pickle.dump(optimizer, f)
