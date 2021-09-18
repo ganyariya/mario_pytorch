@@ -1,4 +1,5 @@
 import json
+import pickle
 
 from typing import Callable, Any
 from pathlib import Path
@@ -29,6 +30,7 @@ from mario_pytorch.util.process_path import (
     get_results_path,
     get_save_path,
     get_reward_models_path,
+    get_pyribs_models_path,
 )
 from mario_pytorch.wrappers.custom import CustomRewardEnv
 from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
@@ -40,10 +42,18 @@ def save_playlog_reward_dict(
     parameter: np.ndarray,
     episode_serial: int,
     behavior: list[int],
-    playlog: PlayLogModel,
+    playlogs: list[PlayLogModel],
+    rewards: list[float],
     reward_models_path: Path,
     playlog_reward_dict: dict[str, Any],
 ) -> None:
+    """プレイログの値ごとに，報酬やエピソード数などを保存する.
+
+    Notes
+    -----
+    モデルも保存するかは今後しだい．
+    リファクタリングしたほうがいいかも.
+    """
     playlog_key = ",".join(map(lambda x: str(x), behavior))
     if playlog_key not in playlog_reward_dict:
         playlog_reward_dict[playlog_key] = []
@@ -51,7 +61,8 @@ def save_playlog_reward_dict(
         {
             "parameter": parameter.tolist(),
             "episode_serial": episode_serial,
-            "playlog": playlog.dict(),
+            "reward": rewards,
+            "playlog": list(map(lambda x: x.dict(), playlogs)),
         }
     )
     with open(reward_models_path / "playlog_reward.json", "w") as f:
@@ -60,7 +71,9 @@ def save_playlog_reward_dict(
 
 def simulate(
     env: CustomRewardEnv,
-    train_on_custom_reward: Callable[[CustomRewardEnv], tuple[int, PlayLogModel]],
+    train_on_custom_reward: Callable[
+        [CustomRewardEnv], tuple[int, list[PlayLogModel], list[float]]
+    ],
     solutions: np.ndarray,
     reward_keys: list[str],
     playlog_keys: list[str],
@@ -90,16 +103,19 @@ def simulate(
     objectives, behaviors = [], []
     for parameter in solutions:
         reward_config = RewardConfig.init_with_keys(parameter, reward_keys)
+        reward_config.POSITION = 0.001  # TODO: 将来ここなんとかする
+        reward_config.TIME = -0.001
         env.change_reward_config(reward_config)
 
-        episode_serial, playlog = train_on_custom_reward(env)
-        objective = playlog.goal
-        behavior = PlayLogModel.select_with_keys(playlog, playlog_keys)
+        episode_serial, playlogs, rewards = train_on_custom_reward(env)
+        objective = playlogs[-1].goal
+        behavior = PlayLogModel.select_with_keys(playlogs[-1], playlog_keys)
         save_playlog_reward_dict(
             parameter,
             episode_serial,
             behavior,
-            playlog,
+            playlogs,
+            rewards,
             reward_models_path,
             playlog_reward_dict,
         )
@@ -111,7 +127,7 @@ def simulate(
 
 def get_train_on_custom_reward(
     env_config: EnvConfig, mario: Mario, logger: MetricLogger
-) -> Callable[[CustomRewardEnv], tuple[int, PlayLogModel]]:
+) -> Callable[[CustomRewardEnv], tuple[int, PlayLogModel, float]]:
     """学習を行うコールバックを返す.
 
     報酬重みが変更された環境を与えると学習を行うコールバックを返す．
@@ -123,13 +139,16 @@ def get_train_on_custom_reward(
     """
     episode_serial = 0
 
-    def callback(env: CustomRewardEnv) -> tuple[int, PlayLogModel]:
+    def callback(env: CustomRewardEnv) -> tuple[int, list[PlayLogModel], list[float]]:
         nonlocal episode_serial
+        rewards = []
+        playlogs = []
 
         # TODO: ログ出力の内容を調整する
         for _ in range(env_config.EPISODES):
             state = env.reset()
 
+            sum_reward = 0
             while True:
                 action = mario.act(state)
                 if (
@@ -139,6 +158,7 @@ def get_train_on_custom_reward(
                     env.render()
 
                 next_state, reward, done, info = env.step(action)
+                sum_reward += reward
 
                 mario.cache(state, next_state, action, reward, done)
                 q, loss = mario.learn()
@@ -150,7 +170,9 @@ def get_train_on_custom_reward(
                 if done:
                     break
 
-            # TODO: このあたりもうまく調整する
+            rewards.append(sum_reward)
+            playlogs.append(info["playlog"])
+
             episode_serial += 1
             logger.log_episode()
             if episode_serial % env_config.EVERY_RECORD == 0:
@@ -159,8 +181,8 @@ def get_train_on_custom_reward(
                     epsilon=mario.exploration_rate,
                     step=mario.curr_step,
                 )
-        # TODO: 平均？
-        return episode_serial, info["playlog"]
+        # TODO: Average?
+        return episode_serial, playlogs, rewards
 
     return callback
 
@@ -181,6 +203,7 @@ def learn_pyribs(
     save_path = get_save_path(results_path)
     checkpoint_path = get_checkpoint_path(save_path)
     reward_models_path = get_reward_models_path(save_path)
+    pyribs_models_path = get_pyribs_models_path(save_path)
     copy_and_backup_env_files(
         save_path, env_config, reward_scope_config, playlog_scope_config
     )
@@ -222,7 +245,7 @@ def learn_pyribs(
         "playlog_keys": playlog_keys,
         "reward_keys": reward_keys,
     }
-    for _ in range(2):
+    for _ in range(1):
         # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
 
@@ -235,6 +258,11 @@ def learn_pyribs(
             reward_models_path,
             playlog_reward_dict,
         )
-        print(objectives)
-        print(behaviors)
         optimizer.tell(objectives, behaviors)
+
+    with open(pyribs_models_path / "archive.pickle", "wb") as f:
+        pickle.dump(archive, f)
+    with open(pyribs_models_path / "emitters.pickle", "wb") as f:
+        pickle.dump(emitters, f)
+    with open(pyribs_models_path / "optimzer.pickle", "wb") as f:
+        pickle.dump(optimizer, f)
