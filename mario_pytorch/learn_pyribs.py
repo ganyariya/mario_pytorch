@@ -53,7 +53,7 @@ def simulate(
     solutions: np.ndarray,
     reward_keys: list[str],
     playlog_keys: list[str],
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """報酬重み（パラメータ）をもとにマリオをプレイさせる.
 
     Attributes
@@ -73,26 +73,40 @@ def simulate(
     behaviors: np.ndarray
         特徴量（プレイログ） (n, r)  rはプレイログの要素の個数
         おそらくプレイログ空間作ったときの順番で入れる必要がある
-
-    Notes
-    -----
-    behaviors は入れるかわからん
-    ただ，多分入れたほうが楽な感じする
     """
+    objectives, behaviors = [], []
     for parameter in solutions:
         reward_config = RewardConfig.init_with_keys(parameter, reward_keys)
         env.change_reward_config(reward_config)
-        env.confirm_reward_config()
+
         playlog = train_on_custom_reward(env)
+        objective = playlog.goal
+        behavior = PlayLogModel.select_with_keys(playlog, playlog_keys)
+
+        objectives.append(objective)
+        behaviors.append(behavior)
+    return np.array(objectives), np.array(behaviors)
 
 
 def get_train_on_custom_reward(
     env_config: EnvConfig, mario: Mario, logger: MetricLogger
 ) -> Callable[[CustomRewardEnv], PlayLogModel]:
+    """学習を行うコールバックを返す.
+
+    報酬重みが変更された環境を与えると学習を行うコールバックを返す．
+    env_config, mario, logger など固定される変数を先にキャプチャしてスッキリさせるためである．
+    """
+
+    count = 0
+
     def callback(env: CustomRewardEnv) -> PlayLogModel:
+        nonlocal count
+
         # TODO: ログ出力の内容を調整する
         for e in range(env_config.EPISODES):
             state = env.reset()
+            count += 1
+            print(count)
 
             while True:
                 action = mario.act(state)
@@ -117,7 +131,7 @@ def get_train_on_custom_reward(
                 logger.record(
                     episode=e, epsilon=mario.exploration_rate, step=mario.curr_step
                 )
-
+        # TODO: 平均？
         return info["playlog"]
 
     return callback
@@ -162,6 +176,7 @@ def learn_pyribs(
 
     optimizer = Optimizer(archive=archive, emitters=emitters)
 
+    # 環境とネットワーク
     env = get_env(env_config, RewardConfig.init())
     mario = Mario(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
@@ -175,9 +190,10 @@ def learn_pyribs(
     for _ in range(2):
         # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
-        print(solutions.shape)
-        print(solutions)
 
-        objectives = simulate(
+        objectives, behaviors = simulate(
             env, train_on_custom_reward, solutions, reward_keys, playlog_keys
         )
+        print(objectives)
+        print(behaviors)
+        optimizer.tell(objectives, behaviors)

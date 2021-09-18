@@ -116,3 +116,10 @@ class PlayLogModel(BaseModel):
                 "kills": 0,
             }
         )
+
+    @staticmethod
+    def select_with_keys(playlog: PlayLogModel, keys: list[str]) -> list[int]:
+        selected = []
+        for key in keys:
+            selected.append(getattr(playlog, key.lower()))
+        return selected
