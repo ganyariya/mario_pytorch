@@ -49,7 +49,7 @@ def tmp_create_reward_config() -> RewardConfig:
 
 def simulate(
     env: CustomRewardEnv,
-    train_on_custom_reward: Callable[[CustomRewardEnv], PlayLogModel],
+    train_on_custom_reward: Callable[[CustomRewardEnv], tuple[int, PlayLogModel]],
     solutions: np.ndarray,
     reward_keys: list[str],
     playlog_keys: list[str],
@@ -79,7 +79,7 @@ def simulate(
         reward_config = RewardConfig.init_with_keys(parameter, reward_keys)
         env.change_reward_config(reward_config)
 
-        playlog = train_on_custom_reward(env)
+        episode_serial, playlog = train_on_custom_reward(env)
         objective = playlog.goal
         behavior = PlayLogModel.select_with_keys(playlog, playlog_keys)
 
@@ -90,27 +90,31 @@ def simulate(
 
 def get_train_on_custom_reward(
     env_config: EnvConfig, mario: Mario, logger: MetricLogger
-) -> Callable[[CustomRewardEnv], PlayLogModel]:
+) -> Callable[[CustomRewardEnv], tuple[int, PlayLogModel]]:
     """学習を行うコールバックを返す.
 
     報酬重みが変更された環境を与えると学習を行うコールバックを返す．
     env_config, mario, logger など固定される変数を先にキャプチャしてスッキリさせるためである．
+
+    Notes
+    -----
+    callback を呼び出す前に報酬重みを変更する必要がある
     """
+    episode_serial = 0
 
-    count = 0
-
-    def callback(env: CustomRewardEnv) -> PlayLogModel:
-        nonlocal count
+    def callback(env: CustomRewardEnv) -> tuple[int, PlayLogModel]:
+        nonlocal episode_serial
 
         # TODO: ログ出力の内容を調整する
-        for e in range(env_config.EPISODES):
+        for _ in range(env_config.EPISODES):
             state = env.reset()
-            count += 1
-            print(count)
 
             while True:
                 action = mario.act(state)
-                if env_config.IS_RENDER and e % env_config.EVERY_RENDER == 0:
+                if (
+                    env_config.IS_RENDER
+                    and episode_serial % env_config.EVERY_RENDER == 0
+                ):
                     env.render()
 
                 next_state, reward, done, info = env.step(action)
@@ -122,17 +126,20 @@ def get_train_on_custom_reward(
 
                 state = next_state
 
-                if done or info["default"].flag_get:
+                if done:
                     break
 
             # TODO: このあたりもうまく調整する
+            episode_serial += 1
             logger.log_episode()
-            if e % env_config.EVERY_RECORD == 0:
+            if episode_serial % env_config.EVERY_RECORD == 0:
                 logger.record(
-                    episode=e, epsilon=mario.exploration_rate, step=mario.curr_step
+                    episode=episode_serial,
+                    epsilon=mario.exploration_rate,
+                    step=mario.curr_step,
                 )
         # TODO: 平均？
-        return info["playlog"]
+        return episode_serial, info["playlog"]
 
     return callback
 
@@ -140,7 +147,7 @@ def get_train_on_custom_reward(
 def learn_pyribs(
     env_config_name: str, reward_scope_config_name: str, playlog_scope_config_name: str
 ) -> None:
-    # パス・設定ファイル
+    # コンフィグ
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
     reward_scope_config_path = get_reward_scope_config_path(reward_scope_config_name)
@@ -148,6 +155,7 @@ def learn_pyribs(
     playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
     playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
 
+    # パス
     results_path = get_results_path()
     save_path = get_save_path(results_path)
     checkpoint_path = get_checkpoint_path(save_path)
