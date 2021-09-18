@@ -36,6 +36,12 @@ def get_checkpoint_path(save_path: Path) -> Path:
     return checkpoint_path
 
 
+def get_reward_models_path(save_path: Path) -> Path:
+    checkpoint_path = save_path / "models"
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
+    return checkpoint_path
+
+
 def get_playlog_path(save_path: Path) -> Path:
     playlog_path = save_path / "playlogs"
     playlog_path.mkdir(parents=True, exist_ok=True)

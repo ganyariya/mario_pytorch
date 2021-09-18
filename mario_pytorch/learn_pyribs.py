@@ -1,4 +1,8 @@
-from typing import Callable
+import json
+
+from typing import Callable, Any
+from pathlib import Path
+
 import numpy as np
 
 from ribs.archives import GridArchive
@@ -24,27 +28,34 @@ from mario_pytorch.util.process_path import (
     get_playlog_scope_config_path,
     get_results_path,
     get_save_path,
+    get_reward_models_path,
 )
 from mario_pytorch.wrappers.custom import CustomRewardEnv
 from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
 
+# ----------------------------------------------------------------------
 
-def tmp_create_reward_config() -> RewardConfig:
-    return RewardConfig(
-        **{
-            "POSITION": 1,
-            "ENEMY": 50,
-            "COIN": 30,
-            "GOAL": 500,
-            "LIFE": -200,
-            "ITEM": 200,
-            "TIME": -1,
-            "SCORE": 0,
+
+def save_playlog_reward_dict(
+    parameter: np.ndarray,
+    episode_serial: int,
+    behavior: list[int],
+    playlog: PlayLogModel,
+    reward_models_path: Path,
+    playlog_reward_dict: dict[str, Any],
+) -> None:
+    playlog_key = ",".join(map(lambda x: str(x), behavior))
+    if playlog_key not in playlog_reward_dict:
+        playlog_reward_dict[playlog_key] = []
+    playlog_reward_dict[playlog_key].append(
+        {
+            "parameter": parameter.tolist(),
+            "episode_serial": episode_serial,
+            "playlog": playlog.dict(),
         }
     )
-
-
-# ----------------------------------------------------------------------
+    with open(reward_models_path / "playlog_reward.json", "w") as f:
+        json.dump(playlog_reward_dict, f, indent=2)
 
 
 def simulate(
@@ -53,6 +64,8 @@ def simulate(
     solutions: np.ndarray,
     reward_keys: list[str],
     playlog_keys: list[str],
+    reward_models_path: Path,
+    playlog_reward_dict: dict[str, Any],
 ) -> tuple[np.ndarray, np.ndarray]:
     """報酬重み（パラメータ）をもとにマリオをプレイさせる.
 
@@ -82,6 +95,14 @@ def simulate(
         episode_serial, playlog = train_on_custom_reward(env)
         objective = playlog.goal
         behavior = PlayLogModel.select_with_keys(playlog, playlog_keys)
+        save_playlog_reward_dict(
+            parameter,
+            episode_serial,
+            behavior,
+            playlog,
+            reward_models_path,
+            playlog_reward_dict,
+        )
 
         objectives.append(objective)
         behaviors.append(behavior)
@@ -159,6 +180,7 @@ def learn_pyribs(
     results_path = get_results_path()
     save_path = get_save_path(results_path)
     checkpoint_path = get_checkpoint_path(save_path)
+    reward_models_path = get_reward_models_path(save_path)
     copy_and_backup_env_files(
         save_path, env_config, reward_scope_config, playlog_scope_config
     )
@@ -193,14 +215,25 @@ def learn_pyribs(
     )
     export_onnx(mario.online_net, env.reset(), transform_mario_input, save_path)
     logger = MetricLogger(save_path)
-    train_on_custom_reward = get_train_on_custom_reward(env_config, mario, logger)
+    train_callback = get_train_on_custom_reward(env_config, mario, logger)
 
+    # 学習
+    playlog_reward_dict = {
+        "playlog_keys": playlog_keys,
+        "reward_keys": reward_keys,
+    }
     for _ in range(2):
         # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
 
         objectives, behaviors = simulate(
-            env, train_on_custom_reward, solutions, reward_keys, playlog_keys
+            env,
+            train_callback,
+            solutions,
+            reward_keys,
+            playlog_keys,
+            reward_models_path,
+            playlog_reward_dict,
         )
         print(objectives)
         print(behaviors)
