@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, PlayLogScopeConfig
+from mario_pytorch.util.config import EnvConfig, PlayLogScopeConfig, RewardScopeConfig
 
 
 def get_env_config_path(env_config_name: str) -> Path:

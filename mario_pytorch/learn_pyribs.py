@@ -1,11 +1,9 @@
 import json
 import pickle
-
-from typing import Callable, Any
 from pathlib import Path
+from typing import Any, Callable
 
 import numpy as np
-
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
@@ -14,9 +12,9 @@ from mario_pytorch.agent.mario import Mario
 from mario_pytorch.metric_logger.metric_logger import MetricLogger
 from mario_pytorch.util.config import (
     EnvConfig,
+    PlayLogScopeConfig,
     RewardConfig,
     RewardScopeConfig,
-    PlayLogScopeConfig,
 )
 from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
@@ -25,12 +23,12 @@ from mario_pytorch.util.process_path import (
     generate_README_file,
     get_checkpoint_path,
     get_env_config_path,
-    get_reward_scope_config_path,
     get_playlog_scope_config_path,
-    get_results_path,
-    get_save_path,
-    get_reward_models_path,
     get_pyribs_models_path,
+    get_results_path,
+    get_reward_models_path,
+    get_reward_scope_config_path,
+    get_save_path,
 )
 from mario_pytorch.wrappers.custom import CustomRewardEnv
 from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
