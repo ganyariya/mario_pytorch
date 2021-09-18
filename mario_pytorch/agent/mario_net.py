@@ -7,11 +7,14 @@ HW_SIZE = 84
 
 
 class MarioNet(nn.Module):
-    """mini cnn structure
+    """mini cnn structure.
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
+    報酬関数の重みの要素は reward_dim として受け取る
     """
 
-    def __init__(self, input_dim: Tuple[int, int, int], output_dim: int):
+    def __init__(
+        self, input_dim: Tuple[int, int, int], output_dim: int, reward_dim: int
+    ):
         super().__init__()
         c, h, w = input_dim
 
@@ -33,7 +36,7 @@ class MarioNet(nn.Module):
         )
 
         self.reward_block = nn.Sequential(
-            nn.Linear(5, 20),
+            nn.Linear(reward_dim, 20),
             nn.ReLU(),
         )
 

@@ -125,7 +125,7 @@ def simulate(
 
 def get_train_on_custom_reward(
     env_config: EnvConfig, mario: Mario, logger: MetricLogger
-) -> Callable[[CustomRewardEnv], tuple[int, PlayLogModel, float]]:
+) -> Callable[[CustomRewardEnv], tuple[int, list[PlayLogModel], list[float]]]:
     """学習を行うコールバックを返す.
 
     報酬重みが変更された環境を与えると学習を行うコールバックを返す．
@@ -232,6 +232,7 @@ def learn_pyribs(
     mario = Mario(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
         action_dim=env.action_space.n,
+        reward_dim=len(reward_keys),
         checkpoint_path=checkpoint_path,
     )
     export_onnx(mario.online_net, env.reset(), transform_mario_input, save_path)

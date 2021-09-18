@@ -22,15 +22,15 @@ def input_format(state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
 
 class BaseMario:
     def __init__(
-        self,
-        state_dim: Tuple[int, int, int],
-        action_dim: int,
+        self, state_dim: Tuple[int, int, int], action_dim: int, reward_dim: int
     ):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.use_cuda = torch.cuda.is_available()
 
-        self.online_net: MarioNet = MarioNet(self.state_dim, self.action_dim).float()
+        self.online_net: MarioNet = MarioNet(
+            self.state_dim, self.action_dim, reward_dim
+        ).float()
         if self.use_cuda:
             self.online_net = self.online_net.to(device="cuda")
         logger.info(self.online_net)
@@ -93,9 +93,10 @@ class Mario(BaseMario):
         self,
         state_dim: Tuple[int, int, int],
         action_dim: int,
+        reward_dim: int,
         checkpoint_path: Path,
     ):
-        super().__init__(state_dim, action_dim)
+        super().__init__(state_dim, action_dim, reward_dim)
         self.checkpoint_path = checkpoint_path
         self.target_net = deepcopy(self.online_net)
         self._sync_Q_target()
