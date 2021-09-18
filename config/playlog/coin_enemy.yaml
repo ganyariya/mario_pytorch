@@ -1,9 +1,9 @@
 KILLS:
-  MAX: 50
+  MAX: 40
   BIN: 20
   USE: true
 COINS:
-  MAX: 50
+  MAX: 40
   BIN: 20
   USE: true
 
