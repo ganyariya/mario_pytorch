@@ -248,6 +248,7 @@ class Mario(BaseMario):
             self.checkpoint_path
             / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
         )
+        # TODO: エピソード数入れたい
         torch.save(
             dict(
                 model=self.online_net.state_dict(),

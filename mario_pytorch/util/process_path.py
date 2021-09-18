@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, PlayLogScopeConfig
+from mario_pytorch.util.config import EnvConfig, PlayLogScopeConfig, RewardScopeConfig
 
 
 def get_env_config_path(env_config_name: str) -> Path:
@@ -32,6 +32,18 @@ def get_save_path(results_path: Path) -> Path:
 
 def get_checkpoint_path(save_path: Path) -> Path:
     checkpoint_path = save_path / "checkpoints"
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
+    return checkpoint_path
+
+
+def get_reward_models_path(save_path: Path) -> Path:
+    checkpoint_path = save_path / "models"
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
+    return checkpoint_path
+
+
+def get_pyribs_models_path(save_path: Path) -> Path:
+    checkpoint_path = save_path / "pyribs_models"
     checkpoint_path.mkdir(parents=True, exist_ok=True)
     return checkpoint_path
 

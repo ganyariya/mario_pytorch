@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
-
-from ribs.visualize import grid_archive_heatmap
+import numpy as np
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
+from ribs.visualize import grid_archive_heatmap
 
 # 行動空間
 archive = GridArchive(dims=([20, 20]), ranges=[(-1, 1), (-1, 1)])
