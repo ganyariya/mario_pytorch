@@ -7,23 +7,25 @@ https://teratail.com/questions/277420
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
 import torch
 from torch.nn import Module
 
-REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
+from mario_pytorch.agent.merge_reward_to_state import merge_reward_to_state as f
 
 
 def export_onnx(
     model: Module,
-    input: torch.Tensor,
+    input_state: torch.Tensor,
+    input_reward: np.ndarray,
     transform: Callable,
     save_dir: Path,
     file_name="rnn.onnx",
 ) -> None:
-    input = transform(input)
+    input_state = transform(input_state)
     torch.onnx.export(
         model,
-        (input, REWARD.repeat((input.shape[0], 1))),
+        f(input_state, input_reward),
         str(save_dir / file_name),
     )
 

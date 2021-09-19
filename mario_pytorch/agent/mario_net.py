@@ -7,11 +7,14 @@ HW_SIZE = 84
 
 
 class MarioNet(nn.Module):
-    """mini cnn structure
+    """mini cnn structure.
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
+    報酬関数の重みの要素は reward_dim として受け取る
     """
 
-    def __init__(self, input_dim: Tuple[int, int, int], output_dim: int):
+    def __init__(
+        self, input_dim: Tuple[int, int, int], output_dim: int, reward_dim: int
+    ):
         super().__init__()
         c, h, w = input_dim
 
@@ -33,7 +36,7 @@ class MarioNet(nn.Module):
         )
 
         self.reward_block = nn.Sequential(
-            nn.Linear(5, 20),
+            nn.Linear(reward_dim, 20),
             nn.ReLU(),
         )
 
@@ -43,13 +46,26 @@ class MarioNet(nn.Module):
             nn.Linear(512, output_dim),
         )
 
-    def forward(self, x, y) -> nn.Module:
-        # x image (32, 4, 84, 84) (32 batch_size, 4つの白黒Frameをまとめている, 縦, 横)
-        # y reward
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> nn.Module:
+        """forward network
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            (batch_size, 4, 84, 84)
+        y : torch.Tensor
+            (batch_size, len(reward_weights))
+
+        Returns
+        -------
+        z : torch.Tensor
+            (batch_size, len(action_size))
+        """
         x = self.image_block(x)
         y = self.reward_block(y)
 
         # x (32, 3136)  y (32, 20)  z (32, 3136 + 20)
         z = torch.cat((x, y), 1)
+
         z = self.merge_block(z)
         return z
