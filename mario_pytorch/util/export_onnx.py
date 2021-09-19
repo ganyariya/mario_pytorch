@@ -7,8 +7,8 @@ https://teratail.com/questions/277420
 from pathlib import Path
 from typing import Callable
 
-import torch
 import numpy as np
+import torch
 from torch.nn import Module
 
 from mario_pytorch.agent.merge_reward_to_state import merge_reward_to_state as f
