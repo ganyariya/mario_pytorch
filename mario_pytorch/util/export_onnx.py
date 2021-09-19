@@ -13,8 +13,6 @@ from torch.nn import Module
 
 from mario_pytorch.agent.merge_reward_to_state import merge_reward_to_state as f
 
-REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
-
 
 def export_onnx(
     model: Module,
