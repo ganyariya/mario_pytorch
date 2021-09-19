@@ -120,7 +120,7 @@ class Mario(BaseMario):
             action = torch.tensor([action]).cuda()
             reward = torch.tensor([reward]).cuda()
             done = torch.tensor([done]).cuda()
-            reward_weights = torch.tensor([reward_weights]).cuda()
+            reward_weights = torch.tensor([reward_weights]).float().cuda()
         else:
             state = torch.tensor(state)
             next_state = torch.tensor(next_state)
