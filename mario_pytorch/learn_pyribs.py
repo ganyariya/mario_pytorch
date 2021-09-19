@@ -70,7 +70,7 @@ def save_playlog_reward_dict(
 def simulate(
     env: CustomRewardEnv,
     train_on_custom_reward: Callable[
-        [CustomRewardEnv], tuple[int, list[PlayLogModel], list[float]]
+        [CustomRewardEnv, np.ndarray], tuple[int, list[PlayLogModel], list[float]]
     ],
     solutions: np.ndarray,
     reward_keys: list[str],
@@ -99,17 +99,20 @@ def simulate(
         おそらくプレイログ空間作ったときの順番で入れる必要がある
     """
     objectives, behaviors = [], []
-    for parameter in solutions:
-        reward_config = RewardConfig.init_with_keys(parameter, reward_keys)
+
+    for reward_parameter in solutions:
+        reward_config = RewardConfig.init_with_keys(reward_parameter, reward_keys)
         reward_config.POSITION = 0.001  # TODO: 将来ここなんとかする
         reward_config.TIME = -0.001
         env.change_reward_config(reward_config)
 
-        episode_serial, playlogs, rewards = train_on_custom_reward(env)
+        episode_serial, playlogs, rewards = train_on_custom_reward(
+            env, reward_parameter
+        )
         objective = playlogs[-1].goal
         behavior = PlayLogModel.select_with_keys(playlogs[-1], playlog_keys)
         save_playlog_reward_dict(
-            parameter,
+            reward_parameter,
             episode_serial,
             behavior,
             playlogs,
@@ -125,7 +128,9 @@ def simulate(
 
 def get_train_on_custom_reward(
     env_config: EnvConfig, mario: Mario, logger: MetricLogger
-) -> Callable[[CustomRewardEnv], tuple[int, list[PlayLogModel], list[float]]]:
+) -> Callable[
+    [CustomRewardEnv, np.ndarray], tuple[int, list[PlayLogModel], list[float]]
+]:
     """学習を行うコールバックを返す.
 
     報酬重みが変更された環境を与えると学習を行うコールバックを返す．
@@ -137,18 +142,20 @@ def get_train_on_custom_reward(
     """
     episode_serial = 0
 
-    def callback(env: CustomRewardEnv) -> tuple[int, list[PlayLogModel], list[float]]:
+    def callback(
+        env: CustomRewardEnv, reward_weights: np.ndarray
+    ) -> tuple[int, list[PlayLogModel], list[float]]:
         nonlocal episode_serial
         rewards = []
         playlogs = []
 
         # TODO: ログ出力の内容を調整する
         for _ in range(env_config.EPISODES):
-            state = env.reset()
+            state = env.reset()  # (4, 84, 84) LazyFrames
 
             sum_reward = 0
             while True:
-                action = mario.act(state)
+                action = mario.act(state, reward_weights)
                 if (
                     env_config.IS_RENDER
                     and episode_serial % env_config.EVERY_RENDER == 0
@@ -158,7 +165,7 @@ def get_train_on_custom_reward(
                 next_state, reward, done, info = env.step(action)
                 sum_reward += reward
 
-                mario.cache(state, next_state, action, reward, done)
+                mario.cache(state, next_state, action, reward, done, reward_weights)
                 q, loss = mario.learn()
 
                 logger.log_step(reward, loss, q)
@@ -235,7 +242,13 @@ def learn_pyribs(
         reward_dim=len(reward_keys),
         checkpoint_path=checkpoint_path,
     )
-    export_onnx(mario.online_net, env.reset(), transform_mario_input, save_path)
+    export_onnx(
+        mario.online_net,
+        env.reset(),
+        np.zeros(len(reward_keys)),
+        transform_mario_input,
+        save_path,
+    )
     logger = MetricLogger(save_path)
     train_callback = get_train_on_custom_reward(env_config, mario, logger)
 

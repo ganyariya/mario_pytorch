@@ -10,14 +10,9 @@ import torch
 from gym.wrappers.frame_stack import LazyFrames
 
 from mario_pytorch.agent.mario_net import MarioNet
+from mario_pytorch.agent.merge_reward_to_state import merge_reward_to_state as frts
 
-REWARD = torch.Tensor([[0, 0, 0, 0, 0]])
 logger = getLogger(__name__)
-
-
-def input_format(state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-    r = REWARD.repeat((state.shape[0], 1))
-    return state, r
 
 
 class BaseMario:
@@ -52,7 +47,7 @@ class BaseMario:
         self.learn_every = 3  # learn_every Frame ごとに Q_online を学習させる
         self.sync_every = 1e4  # Q_target & Q_online の同期タイミング
 
-    def act(self, state: LazyFrames) -> int:
+    def act(self, state: LazyFrames, reward_weights: np.ndarray) -> int:
         """
         Given a state, choose an epsilon-greedy action and update value of step.
 
@@ -68,22 +63,19 @@ class BaseMario:
 
         # EXPLOIT
         else:
-            state = state.__array__()
+            state = state.__array__()  # LazyFrames -> ndarray
             if self.use_cuda:
                 state = torch.tensor(state).cuda()
             else:
                 state = torch.tensor(state)
 
-            # (4, 84, 84) -> (1, 4, 84, 84)
-            state = state.unsqueeze(0)
-            action_values = self.online_net(*input_format(state))
+            state = state.unsqueeze(0)  # (4, 84, 84) -> (1, 4, 84, 84)
+            action_values = self.online_net(*frts(state, reward_weights))
             action_idx = torch.argmax(action_values, axis=1).item()
 
-        # decrease exploration_rate
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
 
-        # increment step
         self.curr_step += 1
         return action_idx
 
@@ -108,32 +100,34 @@ class Mario(BaseMario):
         action: int,
         reward: float,
         done: bool,
+        reward_weights: np.ndarray,
     ) -> None:
         """
         Store the experience to self.memory (replay buffer)
 
-        Inputs:
-        state (LazyFrame),
-        next_state (LazyFrame),
-        action (int),
-        reward (float),
-        done(bool))
+        Notes
+        -----
+        memory に入る変数の shape
+        - state (4, 84, 84)
+        - action (1)  reward (1)  done (1)
+        - weights (1, 2)
         """
         state = state.__array__()
         next_state = next_state.__array__()
-
         if self.use_cuda:
             state = torch.tensor(state).cuda()
             next_state = torch.tensor(next_state).cuda()
             action = torch.tensor([action]).cuda()
             reward = torch.tensor([reward]).cuda()
             done = torch.tensor([done]).cuda()
+            reward_weights = torch.tensor([reward_weights]).cuda()
         else:
             state = torch.tensor(state)
             next_state = torch.tensor(next_state)
             action = torch.tensor([action])
             reward = torch.tensor([reward])
             done = torch.tensor([done])
+            reward_weights = torch.tensor([reward_weights]).float()
 
         self.memory.append(
             (
@@ -142,17 +136,32 @@ class Mario(BaseMario):
                 action,
                 reward,
                 done,
+                reward_weights,
             )
         )
 
     def recall(self) -> Tuple[torch.Tensor]:
         """
         Retrieve a batch of experiences from memory
+
+        Notes
+        -----
+        state: (32, 4, 84, 84) torch
+        action: (32, 1) torch
+        action.squeeze(): (32) torch
+        weights: (32, 1, 2) torch
+        weights.squeeze(): (32, 2) torch
         """
-        # batch_size 個取り出して 各要素ごとのList(Torch)にする
         batch = random.sample(self.memory, self.batch_size)
-        state, next_state, action, reward, done = map(torch.stack, zip(*batch))
-        return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
+        state, next_state, action, reward, done, weights = map(torch.stack, zip(*batch))
+        return (
+            state,
+            next_state,
+            action.squeeze(),
+            reward.squeeze(),
+            done.squeeze(),
+            weights.squeeze(),
+        )
 
     def learn(self) -> Tuple[Optional[float], Optional[float]]:
         """Update online action value (Q) function with a batch of experiences.
@@ -172,13 +181,13 @@ class Mario(BaseMario):
 
         # 過去のスタックから self.batch_size (32) だけ持ってくる
         # 1 つに 4 frame 入っているはず
-        state, next_state, action, reward, done = self.recall()
+        state, next_state, action, reward, done, weights = self.recall()
 
         # TD Estimate -- Online (学習)
-        td_est = self._td_estimate(state, action)
+        td_est = self._td_estimate(state, action, weights)
 
         # TD Target -- Target (固定)
-        td_tgt = self._td_target(reward, next_state, done)
+        td_tgt = self._td_target(reward, next_state, done, weights)
 
         # https://colab.research.google.com/github/YutaroOgawa/pytorch_tutorials_jp/blob/main/notebook/4_RL/4_2_mario_rl_tutorial_jp.ipynb#scrollTo=hjDCD1o3PKHX
         # Backpropagate loss through Q_online
@@ -186,16 +195,29 @@ class Mario(BaseMario):
 
         return (td_est.mean().item(), loss)
 
-    def _td_estimate(self, state: torch.Tensor, action: torch.Tensor) -> torch.Tensor:
-        # r: (num_of_state, len(報酬関数の要素の数)) の 2次元Tensor
-        current_Q = self.online_net(*input_format(state))[
+    def _td_estimate(
+        self, state: torch.Tensor, action: torch.Tensor, weights: torch.Tensor
+    ) -> torch.Tensor:
+        """推定する.
+
+        Notes
+        -----
+        r: (batch_size, len(reward_weights))
+        shape: (batch_size, 4, 84, 84)
+        current_Q[np=s, action=a] = [32] (取り出している)
+        """
+        current_Q = self.online_net(state, weights)[
             np.arange(0, self.batch_size), action
-        ]  # Q_online(s,a) # shape torch.Size([32]) # 32 is batch size
+        ]
         return current_Q
 
     @torch.no_grad()
     def _td_target(
-        self, reward: torch.Tensor, next_state: torch.Tensor, done: torch.Tensor
+        self,
+        reward: torch.Tensor,
+        next_state: torch.Tensor,
+        done: torch.Tensor,
+        weights: torch.Tensor,
     ) -> torch.Tensor:
         """
         DQN
@@ -218,16 +240,11 @@ class Mario(BaseMario):
         -----
         torch.no_grad で勾配計算を無効にしている
         """
-        # 32 is batch size # 7 is action size # Tensor (32, 7)
-        # Q_target(s', a') # shape torch.Size([32])
-        next_state_Q = self.online_net(*input_format(next_state))
+        next_state_Q = self.online_net(next_state, weights)
         best_action: int = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.target_net(*input_format(next_state))[
+        next_Q = self.target_net(next_state, weights)[
             np.arange(0, self.batch_size), best_action
         ]
-        # !done ならまだゲーム終了してないので，1で考慮する
-        # done だと終わっているので 0で考慮しない
-        # r + \gamma * next_Q * is_done
         return (reward + (1 - done.float()) * self.gamma * next_Q).float()
 
     def _update_Q_online(
