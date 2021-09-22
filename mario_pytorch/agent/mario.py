@@ -282,9 +282,10 @@ class LearnedMario(BaseMario):
         self,
         state_dim: Tuple[int, int, int],
         action_dim: int,
+        reward_dim: int,
         model: OrderedDict,
         exploration_rate: float,
     ):
-        super().__init__(state_dim, action_dim)
+        super().__init__(state_dim, action_dim, reward_dim)
         self.online_net.load_state_dict(model)
         self.exploration_rate = exploration_rate
