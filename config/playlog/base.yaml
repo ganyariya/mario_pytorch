@@ -1,0 +1,31 @@
+# pyribs でなく固定された報酬用なので適当な感じ
+KILLS:
+  USE: false
+COINS:
+  USE: false
+X_POS:
+  USE: false
+X_ABS:
+  USE: false
+X_PLUS:
+  USE: false
+X_MINUS:
+  USE: false
+LIFE:
+  USE: false
+LIFE_PLUS:
+  USE: false
+LIFE_MINUS:
+  USE: false
+GOAL:
+  USE: false
+ITEM:
+  USE: false
+ITEM_PLUS:
+  USE: false
+ITEM_MINUS:
+  USE: false
+ELAPSED:
+  USE: false
+SCORE:
+  USE: false

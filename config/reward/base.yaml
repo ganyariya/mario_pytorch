@@ -1,24 +1,18 @@
-POSITION:
-  MIN: -1
-  MAX: 1
+# learn 用 pyribs用ではない
+# そのためにすべて Trueにしている
 ENEMY:
-  MIN: -1
-  MAX: 1
+  USE: true
 COIN:
-  MIN: -1
-  MAX: 1
+  USE: true
+POSITION:
+  USE: true
 GOAL:
-  MIN: -1
-  MAX: 1
+  USE: true
 LIFE:
-  MIN: -1
-  MAX: 1
+  USE: true
 ITEM:
-  MIN: -1
-  MAX: 1
-TIME: # マイナスだとマリオが早くゴールを目指す
-  MIN: -1
-  MAX: 1
+  USE: true
+TIME:
+  USE: true
 SCORE:
-  MIN: -1
-  MAX: 1
+  USE: true
