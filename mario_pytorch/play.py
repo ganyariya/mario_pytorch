@@ -54,7 +54,7 @@ def play(
         action_dim=env.action_space.n,
         reward_dim=len(reward_keys),
         model=model,
-        exploration_rate=0,
+        exploration_rate=exploration_rate,
     )
 
     for _ in range(10000):
