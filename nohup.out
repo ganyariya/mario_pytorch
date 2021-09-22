@@ -1,0 +1,15 @@
+2021/09/23 08:02:04 - mario_pytorch.wrappers.custom.custom_reward_env - INFO
+[CHANGED] POSITION=1 ENEMY=300 COIN=0 GOAL=0 LIFE=0 ITEM=0 TIME=-1 SCORE=0
+2021/09/23 08:07:16 - mario_pytorch.metric_logger.metric_logger - INFO
+Episode 20 - Step 19067 - Epsilon 0.9952445923289895 - Mean Reward 2747.25 - Mean Length 953.35 - Mean Loss 0.83 - Mean Q Value 0.681 - Time Delta 312.02 - 
+2021-09-23 08:07:16.280 Python[9889:106551] ApplePersistenceIgnoreState: Existing state will not be touched. New state will be written to /var/folders/3k/lytx65bd26l9130j83nlvlx80000gn/T/org.python.python.savedState
+2021/09/23 08:16:56 - mario_pytorch.metric_logger.metric_logger - INFO
+Episode 40 - Step 37031 - Epsilon 0.9907849698844949 - Mean Reward 2668.35 - Mean Length 925.775 - Mean Loss 1.404 - Mean Q Value 2.575 - Time Delta 580.191 - 
+2021/09/23 08:26:30 - mario_pytorch.metric_logger.metric_logger - INFO
+Episode 60 - Step 60385 - Epsilon 0.9850171252809511 - Mean Reward 2694.183 - Mean Length 1006.417 - Mean Loss 1.667 - Mean Q Value 4.107 - Time Delta 573.809 - 
+2021/09/23 08:35:06 - mario_pytorch.metric_logger.metric_logger - INFO
+Episode 80 - Step 81747 - Epsilon 0.9797706625035834 - Mean Reward 2668.912 - Mean Length 1021.838 - Mean Loss 1.833 - Mean Q Value 5.335 - Time Delta 516.374 - 
+2021/09/23 08:42:38 - mario_pytorch.agent.mario - INFO
+MarioNet saved to /Users/ganariya/research/mario_pytorch/results/2021-09-23T08-02-02/checkpoints/mario_net_1.chkpt at step 100000
+2021/09/23 08:44:16 - mario_pytorch.metric_logger.metric_logger - INFO
+Episode 100 - Step 103996 - Epsilon 0.9743360607743131 - Mean Reward 2735.29 - Mean Length 1039.96 - Mean Loss 1.962 - Mean Q Value 6.39 - Time Delta 549.798 - 
