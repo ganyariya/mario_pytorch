@@ -7,7 +7,7 @@ import time
 import torch
 
 from mario_pytorch.agent.mario import LearnedMario
-from mario_pytorch.util.config import EnvConfig, RewardScopeConfig, RewardConfig
+from mario_pytorch.util.config import EnvConfig, RewardConfig, RewardScopeConfig
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (
     get_checkpoint_path,
@@ -17,7 +17,6 @@ from mario_pytorch.util.process_path import (
     get_results_path,
     get_reward_scope_config_path,
 )
-
 
 # ----------------------------------------------------------------------
 
