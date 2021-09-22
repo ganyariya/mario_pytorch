@@ -1,4 +1,5 @@
 import json
+import random
 import pickle
 from pathlib import Path
 from typing import Any, Callable
@@ -102,8 +103,18 @@ def simulate(
 
     for reward_parameter in solutions:
         reward_config = RewardConfig.init_with_keys(reward_parameter, reward_keys)
-        reward_config.POSITION = 0.001  # TODO: 将来ここなんとかする
-        reward_config.TIME = -0.001
+
+        r = random.random()
+        if r < 0.5:
+            reward_config.COIN = 300
+            reward_config.ENEMY = 0
+        else:
+            reward_config.COIN = 0
+            reward_config.ENEMY = 300
+
+        reward_config.POSITION = 1
+        reward_config.TIME = -1
+
         env.change_reward_config(reward_config)
 
         episode_serial, playlogs, rewards = train_on_custom_reward(
