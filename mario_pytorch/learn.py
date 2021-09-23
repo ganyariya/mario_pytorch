@@ -44,6 +44,12 @@ def tmp_create_reward_config() -> RewardConfig:
     )
 
 
+def revise_reward_weights(reward_config: RewardConfig) -> RewardConfig:
+    for x in reward_config:
+        setattr(reward_config, x[0], x[1] / 1000)
+    return reward_config
+
+
 # ----------------------------------------------------------------------
 
 
@@ -65,8 +71,10 @@ def learn(env_config_name: str, reward_scope_config_name: str) -> None:
     playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
 
     reward_config = tmp_create_reward_config()
+    reward_config = revise_reward_weights(reward_config)
     reward_weights = get_reward_weights(reward_config)
     print(reward_weights)
+    print(reward_config)
 
     results_path = get_results_path()
     save_path = get_save_path(results_path)
