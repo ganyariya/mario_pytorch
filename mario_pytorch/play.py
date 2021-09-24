@@ -62,8 +62,8 @@ def play(
         reward_config = RewardConfig.init_with_keys(reward_weights, reward_keys)
 
         # カスタム
-        reward_config.POSITION = 0.001
-        reward_config.TIME = -0.001
+        # reward_config.POSITION = 0.001
+        # reward_config.TIME = -0.001
 
         env.change_reward_config(reward_config)
 
