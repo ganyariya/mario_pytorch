@@ -1,4 +1,5 @@
 import json
+import copy
 import random
 import pickle
 from pathlib import Path
@@ -103,17 +104,18 @@ def simulate(
 
     for reward_parameter in solutions:
         reward_config = RewardConfig.init_with_keys(reward_parameter, reward_keys)
+        reward_copy = copy.deepcopy(reward_parameter)
 
         r = random.random()
         if r < 0.5:
-            reward_parameter[0] = 0  # enemy
-            reward_parameter[1] = 300  # coin
+            reward_copy[0] = 0  # enemy
+            reward_copy[1] = 300  # coin
 
             reward_config.COIN = 300
             reward_config.ENEMY = 0
         else:
-            reward_parameter[0] = 300  # enemy
-            reward_parameter[1] = 0  # coin
+            reward_copy[0] = 300  # enemy
+            reward_copy[1] = 0  # coin
 
             reward_config.COIN = 0
             reward_config.ENEMY = 300
@@ -123,13 +125,11 @@ def simulate(
 
         env.change_reward_config(reward_config)
 
-        episode_serial, playlogs, rewards = train_on_custom_reward(
-            env, reward_parameter
-        )
+        episode_serial, playlogs, rewards = train_on_custom_reward(env, reward_copy)
         objective = playlogs[-1].goal
         behavior = PlayLogModel.select_with_keys(playlogs[-1], playlog_keys)
         save_playlog_reward_dict(
-            reward_parameter,
+            reward_copy,
             episode_serial,
             behavior,
             playlogs,
@@ -137,7 +137,6 @@ def simulate(
             reward_models_path,
             playlog_reward_dict,
         )
-
         objectives.append(objective)
         behaviors.append(behavior)
     return np.array(objectives), np.array(behaviors)
