@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
+import dill
+import torch
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
-import torch
 
 from mario_pytorch.agent.mario import Mario, ReLearnMario
-from mario_pytorch.metric_logger.metric_logger import MetricLogger
+from mario_pytorch.metric_logger.metric_logger import MetricLogger, _set_logger
 from mario_pytorch.util.config import (
     EnvConfig,
     PlayLogScopeConfig,
@@ -38,16 +39,18 @@ from mario_pytorch.util.save_model import save_episode_model
 
 def restore_objects(
     pickles_path: Path, reward_models_path: Path
-) -> tuple[GridArchive, ImprovementEmitter, Optimizer, dict[str, Any]]:
+) -> tuple[GridArchive, ImprovementEmitter, Optimizer, MetricLogger, dict[str, Any]]:
     with open(pickles_path / "archive.pickle", "rb") as f:
         archive: GridArchive = pickle.load(f)
     with open(pickles_path / "emitters.pickle", "rb") as f:
         emitters: ImprovementEmitter = pickle.load(f)
     with open(pickles_path / "optimzer.pickle", "rb") as f:
         optimizer: Optimizer = pickle.load(f)
+    with open(pickles_path / "logger.dill", "rb") as f:
+        logger: MetricLogger = dill.load(f)
     with open(reward_models_path / "playlog_reward.json", "r") as f:
         playlog_reward_dict = json.load(f)
-    return archive, emitters, optimizer, playlog_reward_dict
+    return archive, emitters, optimizer, logger, playlog_reward_dict
 
 
 def save_playlog_reward_dict(
@@ -120,6 +123,7 @@ def simulate(
         reward_config.TIME = -0.001
         env.change_reward_config(reward_config)
 
+        print("here")
         episode_serial, playlogs, rewards = train_on_custom_reward(
             env, reward_parameter
         )
@@ -243,6 +247,7 @@ def relearn_pyribs(
     episode_model_path = get_model_path(checkpoint_path, checkpoint_idx, "episode")
     reward_models_path = get_reward_models_path(date_path)
     pickles_path = get_pickles_path(date_path)
+    _set_logger(date_path)
 
     # Restore
     loaded = torch.load(episode_model_path)
@@ -250,7 +255,7 @@ def relearn_pyribs(
     exploration_rate = loaded["exploration_rate"]
     episode = loaded["episode"]
     step = loaded["step"]
-    archive, emitters, optimizer, playlog_reward_dict = restore_objects(
+    archive, emitters, optimizer, logger, playlog_reward_dict = restore_objects(
         pickles_path, reward_models_path
     )
     print(f"exploration_rate: {exploration_rate} episode: {episode} step: {step}")
@@ -275,7 +280,7 @@ def relearn_pyribs(
         exploration_rate=exploration_rate,
         step=step,
     )
-    logger = MetricLogger(date_path)
+    # logger = MetricLogger(date_path)
     train_callback = get_train_on_custom_reward(
         env_config, mario, logger, checkpoint_path, episode
     )

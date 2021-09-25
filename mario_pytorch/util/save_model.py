@@ -22,7 +22,7 @@ def save_episode_model(
         ),
         str(save_checkpoint_path),
     )
-    logger.info(f"Net to {checkpoint_path} at episode / step  {episode} / {step}")
+    logger.info(f"Net to {checkpoint_path} at episode/step   {episode}/{step}")
 
 
 def save_step_model(
@@ -40,4 +40,4 @@ def save_step_model(
         ),
         str(save_checkpoint_path),
     )
-    logger.info(f"Net to {checkpoint_path} at episode / step  {episode} / {step}")
+    logger.info(f"Net to {checkpoint_path} at episode/step   {episode}/{step}")

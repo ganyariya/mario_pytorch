@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
+import dill
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
@@ -291,3 +292,5 @@ def learn_pyribs(
             pickle.dump(emitters, f)
         with open(pickles_path / "optimzer.pickle", "wb") as f:
             pickle.dump(optimizer, f)
+        with open(pickles_path / "logger.dill", "wb") as f:
+            dill.dump(logger, f)
