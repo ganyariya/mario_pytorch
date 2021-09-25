@@ -2,6 +2,7 @@ from typer import Typer
 
 from mario_pytorch.cli_components.cli_learn import cli_learn
 from mario_pytorch.cli_components.cli_learn_pyribs import cli_learn_pyribs
+from mario_pytorch.cli_components.cli_relearn_pyribs import cli_relearn_pyribs
 from mario_pytorch.cli_components.cli_play import cli_play
 
 app: Typer = Typer()
@@ -18,6 +19,23 @@ def learn_pyribs(
 ) -> None:
     cli_learn_pyribs(
         env_config_name, reward_scope_config_name, playlog_scope_config_name
+    )
+
+
+@app.command()
+def relearn_pyribs(
+    env_config_name: str,
+    reward_scope_config_name: str,
+    playlog_scope_config_name: str,
+    date_str: str,
+    checkpoint_idx: int,
+) -> None:
+    cli_relearn_pyribs(
+        env_config_name,
+        reward_scope_config_name,
+        playlog_scope_config_name,
+        date_str,
+        checkpoint_idx,
     )
 
 
