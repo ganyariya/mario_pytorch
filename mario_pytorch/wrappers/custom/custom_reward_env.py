@@ -282,7 +282,7 @@ class CustomRewardEnv(gym.Wrapper):
 
     def process_reward(
         self, diff_info_model: DiffInfoModel
-    ) -> Tuple[int, RewardInfoModel]:
+    ) -> Tuple[float, RewardInfoModel]:
         x_pos = self.process_reward_x(diff_info_model)
         coins = self.process_reward_coin(diff_info_model)
         life = self.process_reward_life(diff_info_model)
@@ -306,26 +306,26 @@ class CustomRewardEnv(gym.Wrapper):
         )
         return reward, reward_info_model
 
-    def process_reward_x(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_x(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.x_pos * self.__reward_config.POSITION
 
-    def process_reward_coin(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_coin(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.coins * self.__reward_config.COIN
 
-    def process_reward_life(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_life(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.life * self.__reward_config.LIFE
 
-    def process_reward_goal(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_goal(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.goal * self.__reward_config.GOAL
 
-    def process_reward_item(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_item(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.item * self.__reward_config.ITEM
 
-    def process_reward_elapsed(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_elapsed(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.elapsed * self.__reward_config.TIME
 
-    def process_reward_score(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_score(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.score * self.__reward_config.SCORE
 
-    def process_reward_kills(self, diff_info_model: DiffInfoModel) -> int:
+    def process_reward_kills(self, diff_info_model: DiffInfoModel) -> float:
         return diff_info_model.kills * self.__reward_config.ENEMY
