@@ -3,6 +3,7 @@ runs
 results
 *.onnx
 .DS_Store
+nohup.out
 
 .idea/
 
