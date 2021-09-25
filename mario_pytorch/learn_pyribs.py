@@ -278,5 +278,3 @@ def learn_pyribs(
             pickle.dump(emitters, f)
         with open(pickles_path / "optimzer.pickle", "wb") as f:
             pickle.dump(optimizer, f)
-        with open(pickles_path / "metric_logger.pickle", "wb") as f:
-            pickle.dump(logger, f)
