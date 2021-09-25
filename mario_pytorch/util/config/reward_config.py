@@ -6,14 +6,14 @@ from pydantic import BaseModel
 
 
 class RewardConfig(BaseModel):
-    POSITION: int
-    ENEMY: int
-    COIN: int
-    GOAL: int
-    LIFE: int
-    ITEM: int
-    TIME: int
-    SCORE: int
+    POSITION: float
+    ENEMY: float
+    COIN: float
+    GOAL: float
+    LIFE: float
+    ITEM: float
+    TIME: float
+    SCORE: float
 
     @staticmethod
     def create(path: str) -> RewardConfig:
@@ -36,7 +36,7 @@ class RewardConfig(BaseModel):
         )
 
     @staticmethod
-    def init_with_keys(parameter: np.ndarra, keys: list[str]) -> RewardConfig:
+    def init_with_keys(parameter: np.ndarray, keys: list[str]) -> RewardConfig:
         ret = RewardConfig.init()
         for i in range(len(parameter)):
             setattr(ret, keys[i], parameter[i])
@@ -44,8 +44,8 @@ class RewardConfig(BaseModel):
 
 
 class RewardScope(BaseModel):
-    MIN: int = -100
-    MAX: int = 100
+    MIN: float = -100
+    MAX: float = 100
     USE: bool = False
 
 
