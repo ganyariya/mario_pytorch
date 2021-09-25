@@ -177,7 +177,7 @@ class MetricLogger:
         self.curr_ep_loss_length = 0
 
     def _init_metric_log_file(self, log_path: Path) -> None:
-        with open(log_path, "w") as f:
+        with open(log_path, "a") as f:
             f.write(
                 f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
