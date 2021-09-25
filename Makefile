@@ -14,8 +14,8 @@ learn_pyribs: ## config_name
 
 
 .PHONY: play
-play: ## config_name date_str checkpoint_idx exploration_rate
-	python -m mario_pytorch.cli play ${config_name} ${config_name} ${date_str} ${checkpoint_idx} ${exploration_rate}
+play: ## config_name date_str checkpoint_idx
+	python -m mario_pytorch.cli play ${config_name} ${config_name} ${date_str} ${checkpoint_idx} 
 
 .PHONY: lint
 lint: ##
