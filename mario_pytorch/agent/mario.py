@@ -166,10 +166,9 @@ class Mario(BaseMario):
         Target は固定する
         Online を学習する
         """
-
         if self.curr_step % self.sync_every == 0:
             self._sync_Q_target()
-        if self.curr_step < self.burnin:
+        if len(self.memory) < self.burnin:
             return None, None
         if self.curr_step % self.learn_every != 0:
             return None, None
