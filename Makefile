@@ -12,6 +12,9 @@ learn: ## config_name
 learn_pyribs: ## config_name
 	python -m mario_pytorch.cli learn-pyribs ${config_name} ${config_name} ${config_name}
 
+.PHONY: relearn_pyribs
+relearn_pyribs: ## config_name
+	python -m mario_pytorch.cli relearn-pyribs ${config_name} ${config_name} ${config_name} ${date_str} ${checkpoint_idx}
 
 .PHONY: play
 play: ## config_name date_str checkpoint_idx

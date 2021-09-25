@@ -257,6 +257,23 @@ class Mario(BaseMario):
             p.requires_grad = False
 
 
+class ReLearnMario(Mario):
+    def __init__(
+        self,
+        state_dim: Tuple[int, int, int],
+        action_dim: int,
+        reward_dim: int,
+        model: OrderedDict,
+        exploration_rate: float,
+        step: int,
+    ):
+        super().__init__(state_dim, action_dim, reward_dim)
+        self.online_net.load_state_dict(model)
+        self._sync_Q_target()
+        self.exploration_rate = exploration_rate
+        self.curr_step = step
+
+
 class LearnedMario(BaseMario):
     def __init__(
         self,
