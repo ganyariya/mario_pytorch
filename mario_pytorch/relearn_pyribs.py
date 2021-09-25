@@ -123,7 +123,6 @@ def simulate(
         reward_config.TIME = -0.001
         env.change_reward_config(reward_config)
 
-        print("here")
         episode_serial, playlogs, rewards = train_on_custom_reward(
             env, reward_parameter
         )
@@ -286,7 +285,6 @@ def relearn_pyribs(
     )
 
     for _ in range(10000000):
-        # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
 
         objectives, behaviors = simulate(
