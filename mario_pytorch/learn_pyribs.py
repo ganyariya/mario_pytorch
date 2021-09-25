@@ -32,6 +32,7 @@ from mario_pytorch.util.process_path import (
 )
 from mario_pytorch.wrappers.custom import CustomRewardEnv
 from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
+from mario_pytorch.util.save_model import save_episode_model
 
 # ----------------------------------------------------------------------
 
@@ -127,7 +128,7 @@ def simulate(
 
 
 def get_train_on_custom_reward(
-    env_config: EnvConfig, mario: Mario, logger: MetricLogger
+    env_config: EnvConfig, mario: Mario, logger: MetricLogger, checkpoint_path: Path
 ) -> Callable[
     [CustomRewardEnv, np.ndarray], tuple[int, list[PlayLogModel], list[float]]
 ]:
@@ -180,12 +181,22 @@ def get_train_on_custom_reward(
 
             episode_serial += 1
             logger.log_episode()
+
             if episode_serial % env_config.EVERY_RECORD == 0:
                 logger.record(
                     episode=episode_serial,
                     epsilon=mario.exploration_rate,
                     step=mario.curr_step,
                 )
+
+            if episode_serial % env_config.EVERY_EPISODE_SAVE == 0:
+                save_episode_model(
+                    mario,
+                    checkpoint_path,
+                    episode_serial,
+                    env_config.EVERY_EPISODE_SAVE,
+                )
+
         # TODO: Average?
         return episode_serial, playlogs, rewards
 
@@ -240,7 +251,6 @@ def learn_pyribs(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
         action_dim=env.action_space.n,
         reward_dim=len(reward_keys),
-        checkpoint_path=checkpoint_path,
     )
     export_onnx(
         mario.online_net,
@@ -250,7 +260,9 @@ def learn_pyribs(
         save_path,
     )
     logger = MetricLogger(save_path)
-    train_callback = get_train_on_custom_reward(env_config, mario, logger)
+    train_callback = get_train_on_custom_reward(
+        env_config, mario, logger, checkpoint_path
+    )
 
     # 学習
     playlog_reward_dict = {

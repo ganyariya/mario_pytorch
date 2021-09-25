@@ -85,10 +85,8 @@ class Mario(BaseMario):
         state_dim: Tuple[int, int, int],
         action_dim: int,
         reward_dim: int,
-        checkpoint_path: Path,
     ):
         super().__init__(state_dim, action_dim, reward_dim)
-        self.checkpoint_path = checkpoint_path
         self.target_net = deepcopy(self.online_net)
         self._sync_Q_target()
 

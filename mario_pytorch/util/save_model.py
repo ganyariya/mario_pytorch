@@ -11,7 +11,7 @@ def save_episode_model(
     mario: BaseMario, checkpoint_path: Path, episode: int, save_every: int
 ) -> None:
     save_checkpoint_path = (
-        checkpoint_path / f"mario_net_{int(episode // save_every)}.chkpt"
+        checkpoint_path / f"episode_mario_net_{int(episode // save_every)}.chkpt"
     )
     torch.save(
         dict(
@@ -28,7 +28,7 @@ def save_step_model(
     mario: BaseMario, checkpoint_path: Path, step: int, save_every: int
 ) -> None:
     save_checkpoint_path = (
-        checkpoint_path / f"mario_net_step_{int(step // save_every)}.chkpt"
+        checkpoint_path / f"step_mario_net_{int(step // save_every)}.chkpt"
     )
     torch.save(
         dict(
