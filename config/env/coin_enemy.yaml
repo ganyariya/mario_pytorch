@@ -10,6 +10,8 @@ IS_RENDER: false
 EPISODES: 100
 EVERY_RECORD: 20
 EVERY_RENDER: 1
+EVERY_EPISODE_SAVE: 100
+EVERY_STEP_SAVE: 100000
 
 INTENTION: |-
   コインとエネミーで pyribs を試す．（pyribs がうまく動くかどうか）

@@ -15,8 +15,11 @@ class EnvConfig(BaseModel):
 
     IS_RENDER: bool
     EPISODES: int
+
     EVERY_RECORD: int
     EVERY_RENDER: int
+    EVERY_EPISODE_SAVE: int
+    EVERY_STEP_SAVE: int
 
     INTENTION: str
 

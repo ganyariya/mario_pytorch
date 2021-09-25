@@ -34,7 +34,6 @@ class BaseMario:
         self.exploration_rate_decay = 0.99999975
         self.exploration_rate_min = 0.1
         self.curr_step = 0  # Frame 回数記憶 (エピソードではなく フレーム)
-        self.save_every = 1e5  # 1e5 Frame ごとにモデル保存
 
         self.memory = deque(maxlen=100000)
         self.batch_size = 32
@@ -172,8 +171,6 @@ class Mario(BaseMario):
 
         if self.curr_step % self.sync_every == 0:
             self._sync_Q_target()
-        if self.curr_step % self.save_every == 0:
-            self._save()
         if self.curr_step < self.burnin:
             return None, None
         if self.curr_step % self.learn_every != 0:
@@ -260,21 +257,6 @@ class Mario(BaseMario):
         self.target_net.load_state_dict(self.online_net.state_dict())
         for p in self.target_net.parameters():
             p.requires_grad = False
-
-    def _save(self) -> None:
-        save_path = (
-            self.checkpoint_path
-            / f"mario_net_{int(self.curr_step // self.save_every)}.chkpt"
-        )
-        # TODO: エピソード数入れたい
-        torch.save(
-            dict(
-                model=self.online_net.state_dict(),
-                exploration_rate=self.exploration_rate,
-            ),
-            save_path,
-        )
-        logger.info(f"MarioNet saved to {save_path} at step {self.curr_step}")
 
 
 class LearnedMario(BaseMario):
