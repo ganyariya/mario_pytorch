@@ -42,8 +42,8 @@ def get_reward_models_path(save_path: Path) -> Path:
     return checkpoint_path
 
 
-def get_pyribs_models_path(save_path: Path) -> Path:
-    checkpoint_path = save_path / "pyribs_models"
+def get_pickles_path(save_path: Path) -> Path:
+    checkpoint_path = save_path / "pickles"
     checkpoint_path.mkdir(parents=True, exist_ok=True)
     return checkpoint_path
 

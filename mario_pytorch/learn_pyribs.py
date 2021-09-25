@@ -24,7 +24,7 @@ from mario_pytorch.util.process_path import (
     get_checkpoint_path,
     get_env_config_path,
     get_playlog_scope_config_path,
-    get_pyribs_models_path,
+    get_pickles_path,
     get_results_path,
     get_reward_models_path,
     get_reward_scope_config_path,
@@ -208,7 +208,7 @@ def learn_pyribs(
     save_path = get_save_path(results_path)
     checkpoint_path = get_checkpoint_path(save_path)
     reward_models_path = get_reward_models_path(save_path)
-    pyribs_models_path = get_pyribs_models_path(save_path)
+    pickles_path = get_pickles_path(save_path)
     copy_and_backup_env_files(
         save_path, env_config, reward_scope_config, playlog_scope_config
     )
@@ -272,9 +272,11 @@ def learn_pyribs(
         )
         optimizer.tell(objectives, behaviors)
 
-        with open(pyribs_models_path / "archive.pickle", "wb") as f:
+        with open(pickles_path / "archive.pickle", "wb") as f:
             pickle.dump(archive, f)
-        with open(pyribs_models_path / "emitters.pickle", "wb") as f:
+        with open(pickles_path / "emitters.pickle", "wb") as f:
             pickle.dump(emitters, f)
-        with open(pyribs_models_path / "optimzer.pickle", "wb") as f:
+        with open(pickles_path / "optimzer.pickle", "wb") as f:
             pickle.dump(optimizer, f)
+        with open(pickles_path / "metric_logger.pickle", "wb") as f:
+            pickle.dump(logger, f)
