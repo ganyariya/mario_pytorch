@@ -68,14 +68,14 @@ class DiffInfoModel(BaseModel):
 
 
 class RewardInfoModel(BaseModel):
-    x_pos: int
-    coins: int
-    life: int
-    goal: int
-    item: int
-    elapsed: int
-    score: int
-    kills: int
+    x_pos: float
+    coins: float
+    life: float
+    goal: float
+    item: float
+    elapsed: float
+    score: float
+    kills: float
 
 
 class PlayLogModel(BaseModel):
