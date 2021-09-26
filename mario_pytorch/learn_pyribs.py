@@ -1,4 +1,5 @@
 import json
+from logging import getLogger
 import pickle
 from pathlib import Path
 from typing import Any, Callable
@@ -230,12 +231,16 @@ def learn_pyribs(
     )
     generate_README_file(save_path)
 
+    # Logger
+    logger = getLogger(__name__)
+    metric_logger = MetricLogger(save_path)
+
     # 行動空間
     playlog_ranges, playlog_bins, playlog_keys = PlayLogScopeConfig.take_out_use(
         playlog_scope_config
     )
     archive = GridArchive(dims=playlog_bins, ranges=playlog_ranges)
-    print(
+    logger.info(
         f"[PLAYLOG] keys:{playlog_keys} ranges: {playlog_ranges} bins: {playlog_bins}"
     )
 
@@ -246,7 +251,7 @@ def learn_pyribs(
             archive, x0=[0] * len(reward_bounds), sigma0=1, bounds=reward_bounds
         )
     ]
-    print(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")
+    logger.info(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")
 
     optimizer = Optimizer(archive=archive, emitters=emitters)
 
@@ -264,7 +269,6 @@ def learn_pyribs(
         transform_mario_input,
         save_path,
     )
-    metric_logger = MetricLogger(save_path)
     train_callback = get_train_on_custom_reward(
         env_config, mario, metric_logger, checkpoint_path
     )
@@ -277,6 +281,7 @@ def learn_pyribs(
     for _ in range(10000000):
         # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
+        logger.info(f"[ASKED] f{solutions}")
 
         objectives, behaviors = simulate(
             env,
@@ -288,6 +293,7 @@ def learn_pyribs(
             playlog_reward_dict,
         )
         optimizer.tell(objectives, behaviors)
+        logger.info("[TELLED]")
 
         with open(pickles_path / "archive.pickle", "wb") as f:
             pickle.dump(archive, f)
@@ -297,3 +303,4 @@ def learn_pyribs(
             pickle.dump(optimizer, f)
         with open(pickles_path / "logger.dill", "wb") as f:
             dill.dump(metric_logger, f)
+        logger.info("[DUMPED]")

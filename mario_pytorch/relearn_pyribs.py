@@ -1,4 +1,5 @@
 import json
+from logging import getLogger
 import pickle
 from pathlib import Path
 from typing import Any, Callable
@@ -257,17 +258,18 @@ def relearn_pyribs(
     archive, emitters, optimizer, metric_logger, playlog_reward_dict = restore_objects(
         pickles_path, reward_models_path
     )
-    print(f"exploration_rate: {exploration_rate} episode: {episode} step: {step}")
+    logger = getLogger(__name__)
+    logger.info(f"exploration_rate: {exploration_rate} episode: {episode} step: {step}")
 
     # Pyribs
     playlog_ranges, playlog_bins, playlog_keys = PlayLogScopeConfig.take_out_use(
         playlog_scope_config
     )
     reward_bounds, reward_keys = RewardScopeConfig.take_out_use(reward_scope_config)
-    print(
+    logger.info(
         f"[PLAYLOG] keys:{playlog_keys} ranges: {playlog_ranges} bins: {playlog_bins}"
     )
-    print(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")
+    logger.info(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")
 
     # Components
     env = get_env(env_config, RewardConfig.init())
@@ -285,6 +287,7 @@ def relearn_pyribs(
 
     for _ in range(10000000):
         solutions = optimizer.ask()
+        logger.info(f"[ASKED] f{solutions}")
 
         objectives, behaviors = simulate(
             env,
@@ -296,6 +299,7 @@ def relearn_pyribs(
             playlog_reward_dict,
         )
         optimizer.tell(objectives, behaviors)
+        logger.info("[TELLED]")
 
         with open(pickles_path / "archive.pickle", "wb") as f:
             pickle.dump(archive, f)
@@ -303,3 +307,4 @@ def relearn_pyribs(
             pickle.dump(emitters, f)
         with open(pickles_path / "optimzer.pickle", "wb") as f:
             pickle.dump(optimizer, f)
+        logger.info("[DUMPED]")
