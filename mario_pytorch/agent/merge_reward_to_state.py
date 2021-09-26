@@ -15,5 +15,8 @@ def merge_reward_to_state(
     state.shape[0] は 画像の枚数（サンプル数）になっている
     そのため，この関数はその枚数分の Tensor (shape[0], len(reward_weights)) を返す
     """
-    r = torch.Tensor([reward_weights]).repeat((state.shape[0], 1))
+    if torch.cuda.is_available():
+        r = torch.Tensor([reward_weights]).cuda().repeat((state.shape[0], 1))
+    else:
+        r = torch.Tensor([reward_weights]).repeat((state.shape[0], 1))
     return state, r
