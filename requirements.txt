@@ -52,6 +52,9 @@ cycler==0.10.0; python_version >= "3.7" \
 decorator==5.1.0; python_version >= "3.5" and python_full_version >= "3.6.0" \
     --hash=sha256:7b12e7c3c6ab203a29e157335e9122cb03de9ab7264b137594103fd4a683b374 \
     --hash=sha256:e59913af105b9860aa2c8d3272d9de5a56a4e608db9a2f167a8480b323d529a7
+dill==0.3.4; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.1.0") \
+    --hash=sha256:7e40e4a70304fd9ceab3535d36e58791d9c4a776b38ec7f7ec9afc8d3dca4d4f \
+    --hash=sha256:9f9734205146b2b353ab3fec9af0070237b6ddae78452af83d2fca84d739e675
 flake8==3.9.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0") \
     --hash=sha256:bf8fd333346d844f616e8d47905ef3a3384edae6b4e9beb0c5101e25e3110907 \
     --hash=sha256:07528381786f2a6237b061f6e96610a4167b226cb926e2aa2b6b1d78057c576b
