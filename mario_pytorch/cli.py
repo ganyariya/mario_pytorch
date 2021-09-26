@@ -2,8 +2,8 @@ from typer import Typer
 
 from mario_pytorch.cli_components.cli_learn import cli_learn
 from mario_pytorch.cli_components.cli_learn_pyribs import cli_learn_pyribs
-from mario_pytorch.cli_components.cli_relearn_pyribs import cli_relearn_pyribs
 from mario_pytorch.cli_components.cli_play import cli_play
+from mario_pytorch.cli_components.cli_relearn_pyribs import cli_relearn_pyribs
 
 app: Typer = Typer()
 

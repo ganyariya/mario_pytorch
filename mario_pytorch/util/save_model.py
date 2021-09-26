@@ -1,8 +1,9 @@
 from logging import getLogger
 from pathlib import Path
-from mario_pytorch.agent.mario import BaseMario
 
 import torch
+
+from mario_pytorch.agent.mario import BaseMario
 
 logger = getLogger(__name__)
 

@@ -1,11 +1,11 @@
 import json
-from logging import getLogger
 import pickle
+from logging import getLogger
 from pathlib import Path
 from typing import Any, Callable
 
-import numpy as np
 import dill
+import numpy as np
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
@@ -25,16 +25,16 @@ from mario_pytorch.util.process_path import (
     generate_README_file,
     get_checkpoint_path,
     get_env_config_path,
-    get_playlog_scope_config_path,
     get_pickles_path,
+    get_playlog_scope_config_path,
     get_results_path,
     get_reward_models_path,
     get_reward_scope_config_path,
     get_save_path,
 )
+from mario_pytorch.util.save_model import save_episode_model
 from mario_pytorch.wrappers.custom import CustomRewardEnv
 from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
-from mario_pytorch.util.save_model import save_episode_model
 
 # ----------------------------------------------------------------------
 
