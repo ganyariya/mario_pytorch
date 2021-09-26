@@ -32,6 +32,9 @@ def export_onnx(
 
 def transform_mario_input(input: torch.Tensor) -> torch.Tensor:
     input = input.__array__()
-    input = torch.tensor(input)
+    if torch.cuda.is_available():
+        input = torch.tensor(input).cuda()
+    else:
+        input = torch.tensor(input)
     input = input.unsqueeze(0)
     return input
