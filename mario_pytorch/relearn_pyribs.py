@@ -6,37 +6,52 @@ from typing import Any, Callable
 
 import dill
 import numpy as np
+import torch
 from ribs.archives import GridArchive
 from ribs.emitters import ImprovementEmitter
 from ribs.optimizers import Optimizer
 
-from mario_pytorch.agent.mario import Mario
-from mario_pytorch.metric_logger.metric_logger import MetricLogger
+from mario_pytorch.agent.mario import Mario, ReLearnMario
+from mario_pytorch.metric_logger.metric_logger import MetricLogger, _set_logger
 from mario_pytorch.util.config import (
     EnvConfig,
     PlayLogScopeConfig,
     RewardConfig,
     RewardScopeConfig,
 )
-from mario_pytorch.util.export_onnx import export_onnx, transform_mario_input
 from mario_pytorch.util.get_env import get_env
 from mario_pytorch.util.process_path import (
-    copy_and_backup_env_files,
-    generate_README_file,
     get_checkpoint_path,
+    get_date_path,
     get_env_config_path,
+    get_model_path,
     get_pickles_path,
     get_playlog_scope_config_path,
     get_results_path,
     get_reward_models_path,
     get_reward_scope_config_path,
-    get_save_path,
 )
 from mario_pytorch.util.save_model import save_episode_model
 from mario_pytorch.wrappers.custom import CustomRewardEnv
 from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
 
 # ----------------------------------------------------------------------
+
+
+def restore_objects(
+    pickles_path: Path, reward_models_path: Path
+) -> tuple[GridArchive, ImprovementEmitter, Optimizer, MetricLogger, dict[str, Any]]:
+    with open(pickles_path / "archive.pickle", "rb") as f:
+        archive: GridArchive = pickle.load(f)
+    with open(pickles_path / "emitters.pickle", "rb") as f:
+        emitters: ImprovementEmitter = pickle.load(f)
+    with open(pickles_path / "optimzer.pickle", "rb") as f:
+        optimizer: Optimizer = pickle.load(f)
+    with open(pickles_path / "logger.dill", "rb") as f:
+        metric_logger: MetricLogger = dill.load(f)
+    with open(reward_models_path / "playlog_reward.json", "r") as f:
+        playlog_reward_dict = json.load(f)
+    return archive, emitters, optimizer, metric_logger, playlog_reward_dict
 
 
 def save_playlog_reward_dict(
@@ -134,6 +149,7 @@ def get_train_on_custom_reward(
     mario: Mario,
     metric_logger: MetricLogger,
     checkpoint_path: Path,
+    episode: int,
 ) -> Callable[
     [CustomRewardEnv, np.ndarray], tuple[int, list[PlayLogModel], list[float]]
 ]:
@@ -146,7 +162,7 @@ def get_train_on_custom_reward(
     -----
     callback を呼び出す前に報酬重みを変更する必要がある
     """
-    episode_serial = 0
+    episode_serial = episode
 
     def callback(
         env: CustomRewardEnv, reward_weights: np.ndarray
@@ -209,10 +225,14 @@ def get_train_on_custom_reward(
     return callback
 
 
-def learn_pyribs(
-    env_config_name: str, reward_scope_config_name: str, playlog_scope_config_name: str
+def relearn_pyribs(
+    env_config_name: str,
+    reward_scope_config_name: str,
+    playlog_scope_config_name: str,
+    date_str: str,
+    checkpoint_idx: int,
 ) -> None:
-    # コンフィグ
+    # Config
     env_config_path = get_env_config_path(env_config_name)
     env_config = EnvConfig.create(str(env_config_path))
     reward_scope_config_path = get_reward_scope_config_path(reward_scope_config_name)
@@ -220,66 +240,52 @@ def learn_pyribs(
     playlog_scope_config_path = get_playlog_scope_config_path(playlog_scope_config_name)
     playlog_scope_config = PlayLogScopeConfig.create(str(playlog_scope_config_path))
 
-    # パス
+    # Path
     results_path = get_results_path()
-    save_path = get_save_path(results_path)
-    checkpoint_path = get_checkpoint_path(save_path)
-    reward_models_path = get_reward_models_path(save_path)
-    pickles_path = get_pickles_path(save_path)
-    copy_and_backup_env_files(
-        save_path, env_config, reward_scope_config, playlog_scope_config
+    date_path = get_date_path(results_path, date_str)
+    checkpoint_path = get_checkpoint_path(date_path)
+    episode_model_path = get_model_path(checkpoint_path, checkpoint_idx, "episode")
+    reward_models_path = get_reward_models_path(date_path)
+    pickles_path = get_pickles_path(date_path)
+    _set_logger(date_path)
+
+    # Restore
+    loaded = torch.load(episode_model_path)
+    model = loaded["model"]
+    exploration_rate = loaded["exploration_rate"]
+    episode = loaded["episode"]
+    step = loaded["step"]
+    archive, emitters, optimizer, metric_logger, playlog_reward_dict = restore_objects(
+        pickles_path, reward_models_path
     )
-    generate_README_file(save_path)
-
-    # Logger
     logger = getLogger(__name__)
-    metric_logger = MetricLogger(save_path)
+    logger.info(f"exploration_rate: {exploration_rate} episode: {episode} step: {step}")
 
-    # 行動空間
+    # Pyribs
     playlog_ranges, playlog_bins, playlog_keys = PlayLogScopeConfig.take_out_use(
         playlog_scope_config
     )
-    archive = GridArchive(dims=playlog_bins, ranges=playlog_ranges)
+    reward_bounds, reward_keys = RewardScopeConfig.take_out_use(reward_scope_config)
     logger.info(
         f"[PLAYLOG] keys:{playlog_keys} ranges: {playlog_ranges} bins: {playlog_bins}"
     )
-
-    # パラメータ空間
-    reward_bounds, reward_keys = RewardScopeConfig.take_out_use(reward_scope_config)
-    emitters = [
-        ImprovementEmitter(
-            archive, x0=[0] * len(reward_bounds), sigma0=1, bounds=reward_bounds
-        )
-    ]
     logger.info(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")
 
-    optimizer = Optimizer(archive=archive, emitters=emitters)
-
-    # 環境とネットワーク
+    # Components
     env = get_env(env_config, RewardConfig.init())
-    mario = Mario(
+    mario = ReLearnMario(
         state_dim=(env_config.NUM_STACK, env_config.SHAPE, env_config.SHAPE),
         action_dim=env.action_space.n,
         reward_dim=len(reward_keys),
-    )
-    export_onnx(
-        mario.online_net,
-        env.reset(),
-        np.zeros(len(reward_keys)),
-        transform_mario_input,
-        save_path,
+        model=model,
+        exploration_rate=exploration_rate,
+        step=step,
     )
     train_callback = get_train_on_custom_reward(
-        env_config, mario, metric_logger, checkpoint_path
+        env_config, mario, metric_logger, checkpoint_path, episode
     )
 
-    # 学習
-    playlog_reward_dict = {
-        "playlog_keys": playlog_keys,
-        "reward_keys": reward_keys,
-    }
     for _ in range(10000000):
-        # パラメータ(報酬重み)空間 (データ数, 重み要素)
         solutions = optimizer.ask()
         logger.info(f"[ASKED] f{solutions}")
 
@@ -301,6 +307,4 @@ def learn_pyribs(
             pickle.dump(emitters, f)
         with open(pickles_path / "optimzer.pickle", "wb") as f:
             pickle.dump(optimizer, f)
-        with open(pickles_path / "logger.dill", "wb") as f:
-            dill.dump(metric_logger, f)
         logger.info("[DUMPED]")

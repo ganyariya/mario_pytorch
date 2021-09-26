@@ -18,6 +18,8 @@ def make_env_config() -> EnvConfig:
             "EPISODES": 3,
             "EVERY_RECORD": 1,
             "EVERY_RENDER": 1,
+            "EVERY_EPISODE_SAVE": 100,
+            "EVERY_STEP_SAVE": 100000,
             "INTENTION": "Test",
         }
     )

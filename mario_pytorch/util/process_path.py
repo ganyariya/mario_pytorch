@@ -1,5 +1,6 @@
 import datetime
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
@@ -42,8 +43,8 @@ def get_reward_models_path(save_path: Path) -> Path:
     return checkpoint_path
 
 
-def get_pyribs_models_path(save_path: Path) -> Path:
-    checkpoint_path = save_path / "pyribs_models"
+def get_pickles_path(save_path: Path) -> Path:
+    checkpoint_path = save_path / "pickles"
     checkpoint_path.mkdir(parents=True, exist_ok=True)
     return checkpoint_path
 
@@ -81,5 +82,7 @@ def get_date_path(results_path: Path, date_str: str) -> Path:
     return results_path / date_str
 
 
-def get_model_path(date_path: Path, checkpoint_idx: int) -> Path:
-    return date_path / f"mario_net_{checkpoint_idx}.chkpt"
+def get_model_path(date_path: Path, checkpoint_idx: int, prefix: Optional[str]) -> Path:
+    if prefix is None:
+        return date_path / f"mario_net_{checkpoint_idx}.chkpt"
+    return date_path / f"{prefix}_mario_net_{checkpoint_idx}.chkpt"

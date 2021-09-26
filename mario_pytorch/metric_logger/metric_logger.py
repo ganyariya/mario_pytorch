@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
+writer = SummaryWriter()
+
 
 def _set_logger(save_dir: Path) -> None:
     logger = getLogger()
@@ -40,7 +42,6 @@ class MetricLogger:
     def __init__(self, save_path: Path) -> None:
         _set_logger(save_path)
 
-        self._writer: Final[SummaryWriter] = SummaryWriter()
         self.save_path: Final[Path] = save_path
         self.image_path: Final[Path] = save_path / "image"
         self.save_metric_log: Final[Path] = save_path / "metric_log"
@@ -135,11 +136,11 @@ class MetricLogger:
         time_since_last_record = np.round(self.record_time - last_record_time, 3)
 
         # TensorBoard
-        self._writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
-        self._writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
-        self._writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
-        self._writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
-        self._writer.add_scalar("Episode/Exploration", epsilon, episode)
+        writer.add_scalar("Episode/MeanReward", mean_ep_reward, episode)
+        writer.add_scalar("Episode/MeanLoss", mean_ep_loss, episode)
+        writer.add_scalar("Episode/MeanQ", mean_ep_q, episode)
+        writer.add_scalar("Episode/MeanLength", mean_ep_length, episode)
+        writer.add_scalar("Episode/Exploration", epsilon, episode)
 
         self.logger.info(
             f"Episode {episode} - "
@@ -177,7 +178,7 @@ class MetricLogger:
         self.curr_ep_loss_length = 0
 
     def _init_metric_log_file(self, log_path: Path) -> None:
-        with open(log_path, "w") as f:
+        with open(log_path, "a") as f:
             f.write(
                 f"{'Episode':>8}{'Step':>10}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"

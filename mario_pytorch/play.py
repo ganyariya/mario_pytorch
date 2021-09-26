@@ -28,7 +28,6 @@ def play(
     reward_scope_config_name: str,
     date_str: str,
     checkpoint_idx: int,
-    exploration_rate: float,
 ) -> None:
     # コンフィグ
     env_config_path = get_env_config_path(env_config_name)
@@ -46,6 +45,8 @@ def play(
 
     # 環境
     model = torch.load(model_path)["model"]
+    exploration_rate = torch.load(model_path)["exploration_rate"]
+    print(f"[EXPLORATION_RATE]: {exploration_rate}")
     env = get_env(env_config, RewardConfig.init())
 
     mario = LearnedMario(
