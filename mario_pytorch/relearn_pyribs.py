@@ -47,10 +47,10 @@ def restore_objects(
     with open(pickles_path / "optimzer.pickle", "rb") as f:
         optimizer: Optimizer = pickle.load(f)
     with open(pickles_path / "logger.dill", "rb") as f:
-        logger: MetricLogger = dill.load(f)
+        metric_logger: MetricLogger = dill.load(f)
     with open(reward_models_path / "playlog_reward.json", "r") as f:
         playlog_reward_dict = json.load(f)
-    return archive, emitters, optimizer, logger, playlog_reward_dict
+    return archive, emitters, optimizer, metric_logger, playlog_reward_dict
 
 
 def save_playlog_reward_dict(
@@ -146,7 +146,7 @@ def simulate(
 def get_train_on_custom_reward(
     env_config: EnvConfig,
     mario: Mario,
-    logger: MetricLogger,
+    metric_logger: MetricLogger,
     checkpoint_path: Path,
     episode: int,
 ) -> Callable[
@@ -155,7 +155,7 @@ def get_train_on_custom_reward(
     """学習を行うコールバックを返す.
 
     報酬重みが変更された環境を与えると学習を行うコールバックを返す．
-    env_config, mario, logger など固定される変数を先にキャプチャしてスッキリさせるためである．
+    env_config, mario, metric_logger など固定される変数を先にキャプチャしてスッキリさせるためである．
 
     Notes
     -----
@@ -189,7 +189,7 @@ def get_train_on_custom_reward(
                 mario.cache(state, next_state, action, reward, done, reward_weights)
                 q, loss = mario.learn()
 
-                logger.log_step(reward, loss, q)
+                metric_logger.log_step(reward, loss, q)
 
                 state = next_state
 
@@ -200,10 +200,10 @@ def get_train_on_custom_reward(
             playlogs.append(info["playlog"])
 
             episode_serial += 1
-            logger.log_episode()
+            metric_logger.log_episode()
 
             if episode_serial % env_config.EVERY_RECORD == 0:
-                logger.record(
+                metric_logger.record(
                     episode=episode_serial,
                     epsilon=mario.exploration_rate,
                     step=mario.curr_step,
@@ -254,7 +254,7 @@ def relearn_pyribs(
     exploration_rate = loaded["exploration_rate"]
     episode = loaded["episode"]
     step = loaded["step"]
-    archive, emitters, optimizer, logger, playlog_reward_dict = restore_objects(
+    archive, emitters, optimizer, metric_logger, playlog_reward_dict = restore_objects(
         pickles_path, reward_models_path
     )
     print(f"exploration_rate: {exploration_rate} episode: {episode} step: {step}")
@@ -279,9 +279,8 @@ def relearn_pyribs(
         exploration_rate=exploration_rate,
         step=step,
     )
-    # logger = MetricLogger(date_path)
     train_callback = get_train_on_custom_reward(
-        env_config, mario, logger, checkpoint_path, episode
+        env_config, mario, metric_logger, checkpoint_path, episode
     )
 
     for _ in range(10000000):

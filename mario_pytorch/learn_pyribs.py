@@ -129,14 +129,17 @@ def simulate(
 
 
 def get_train_on_custom_reward(
-    env_config: EnvConfig, mario: Mario, logger: MetricLogger, checkpoint_path: Path
+    env_config: EnvConfig,
+    mario: Mario,
+    metric_logger: MetricLogger,
+    checkpoint_path: Path,
 ) -> Callable[
     [CustomRewardEnv, np.ndarray], tuple[int, list[PlayLogModel], list[float]]
 ]:
     """学習を行うコールバックを返す.
 
     報酬重みが変更された環境を与えると学習を行うコールバックを返す．
-    env_config, mario, logger など固定される変数を先にキャプチャしてスッキリさせるためである．
+    env_config, mario, metric_logger など固定される変数を先にキャプチャしてスッキリさせるためである．
 
     Notes
     -----
@@ -170,7 +173,7 @@ def get_train_on_custom_reward(
                 mario.cache(state, next_state, action, reward, done, reward_weights)
                 q, loss = mario.learn()
 
-                logger.log_step(reward, loss, q)
+                metric_logger.log_step(reward, loss, q)
 
                 state = next_state
 
@@ -181,10 +184,10 @@ def get_train_on_custom_reward(
             playlogs.append(info["playlog"])
 
             episode_serial += 1
-            logger.log_episode()
+            metric_logger.log_episode()
 
             if episode_serial % env_config.EVERY_RECORD == 0:
-                logger.record(
+                metric_logger.record(
                     episode=episode_serial,
                     epsilon=mario.exploration_rate,
                     step=mario.curr_step,
@@ -261,9 +264,9 @@ def learn_pyribs(
         transform_mario_input,
         save_path,
     )
-    logger = MetricLogger(save_path)
+    metric_logger = MetricLogger(save_path)
     train_callback = get_train_on_custom_reward(
-        env_config, mario, logger, checkpoint_path
+        env_config, mario, metric_logger, checkpoint_path
     )
 
     # 学習
@@ -293,4 +296,4 @@ def learn_pyribs(
         with open(pickles_path / "optimzer.pickle", "wb") as f:
             pickle.dump(optimizer, f)
         with open(pickles_path / "logger.dill", "wb") as f:
-            dill.dump(logger, f)
+            dill.dump(metric_logger, f)
