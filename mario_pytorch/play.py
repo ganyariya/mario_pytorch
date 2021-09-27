@@ -3,6 +3,7 @@ https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html
 https://github.com/YuansongFeng/MadMario/blob/master/agent.py
 """
 import time
+from pydantic.types import conint
 
 import torch
 
@@ -67,25 +68,32 @@ def play(
 
         env.change_reward_config(reward_config)
 
-        for e in range(EPISODE_LENGTH):
+        coins = []
+        kills = []
+
+        for e in range(3):
 
             state = env.reset()
             reward_sum = 0
 
             while True:
                 action = mario.act(state, reward_weights)
-                env.render()
+                # env.render()
 
                 next_state, reward, done, info = env.step(action)
                 reward_sum += reward
                 state = next_state
 
-                time.sleep(0.05)
+                # time.sleep(0.05)
                 # print(info["playlog"])
                 # print(info["custom_reward_info"])
 
                 if done or info["default"].flag_get:
                     break
 
-            print(reward_sum)
-            print(info["playlog"])
+            coins.append(info["playlog"].coins)
+            kills.append(info["playlog"].kills)
+
+        print(reward_config)
+        print(f"coins: {sum(coins)} {coins}")
+        print(f"kills: {sum(kills)} {kills}")
