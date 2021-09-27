@@ -80,7 +80,7 @@ def play(
                 reward_sum += reward
                 state = next_state
 
-                time.sleep(0.01)
+                time.sleep(0.05)
                 # print(info["playlog"])
                 # print(info["custom_reward_info"])
 
