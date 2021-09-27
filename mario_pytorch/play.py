@@ -81,7 +81,8 @@ def play(
                 state = next_state
 
                 time.sleep(0.01)
-                print(info["playlog"])
+                # print(info["playlog"])
+                # print(info["custom_reward_info"])
 
                 if done or info["default"].flag_get:
                     break
