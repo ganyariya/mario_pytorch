@@ -62,8 +62,8 @@ def play(
         reward_config = RewardConfig.init_with_keys(reward_weights, reward_keys)
 
         # カスタム
-        reward_config.POSITION = 0.001
-        reward_config.TIME = -0.001
+        reward_config.POSITION = 1
+        reward_config.TIME = -1
 
         env.change_reward_config(reward_config)
 
@@ -80,8 +80,8 @@ def play(
                 reward_sum += reward
                 state = next_state
 
-                time.sleep(0.001)
-                # print(info["playlog"])
+                time.sleep(0.01)
+                print(info["playlog"])
 
                 if done or info["default"].flag_get:
                     break
