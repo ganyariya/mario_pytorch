@@ -39,6 +39,14 @@ from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
 # ----------------------------------------------------------------------
 
 
+def change_reward_tmp(reward_config: RewardConfig) -> RewardConfig:
+    reward_config.POSITION = 1
+    reward_config.TIME = -1
+    reward_config.GOAL = 100
+    reward_config.LIFE = 100
+    return reward_config
+
+
 def save_playlog_reward_dict(
     parameter: np.ndarray,
     episode_serial: int,
@@ -105,8 +113,7 @@ def simulate(
 
     for reward_parameter in solutions:
         reward_config = RewardConfig.init_with_keys(reward_parameter, reward_keys)
-        reward_config.POSITION = 0.001  # TODO: 将来ここなんとかする
-        reward_config.TIME = -0.001
+        reward_config = change_reward_tmp(reward_config)
         env.change_reward_config(reward_config)
 
         episode_serial, playlogs, rewards = train_on_custom_reward(
