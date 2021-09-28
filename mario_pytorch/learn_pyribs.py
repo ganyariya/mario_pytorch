@@ -248,7 +248,7 @@ def learn_pyribs(
     reward_bounds, reward_keys = RewardScopeConfig.take_out_use(reward_scope_config)
     emitters = [
         ImprovementEmitter(
-            archive, x0=[0] * len(reward_bounds), sigma0=1, bounds=reward_bounds
+            archive, x0=[0] * len(reward_bounds), sigma0=100, bounds=reward_bounds
         )
     ]
     logger.info(f"[REWARD] keys:{reward_keys} bounds:{reward_bounds}")

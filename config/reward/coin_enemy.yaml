@@ -1,10 +1,10 @@
 ENEMY:
-  MIN: -100
-  MAX: 100
+  MIN: -500
+  MAX: 500
   USE: true
 COIN:
-  MIN: -100
-  MAX: 100
+  MIN: -500
+  MAX: 500
   USE: true
 
 POSITION:
