@@ -71,7 +71,7 @@ def play(
         coins = []
         kills = []
 
-        for e in range(50):
+        for e in range(200):
 
             state = env.reset()
             reward_sum = 0
