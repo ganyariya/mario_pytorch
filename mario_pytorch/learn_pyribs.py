@@ -42,8 +42,8 @@ from mario_pytorch.wrappers.custom.custom_info_model import PlayLogModel
 def change_reward_tmp(reward_config: RewardConfig) -> RewardConfig:
     reward_config.POSITION = 1
     reward_config.TIME = -1
-    reward_config.GOAL = 100
-    reward_config.LIFE = 100
+    reward_config.GOAL = 500
+    reward_config.LIFE = 500
     return reward_config
 
 
