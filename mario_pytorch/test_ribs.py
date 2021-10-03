@@ -18,23 +18,52 @@ def simulate(solutions: np.ndarray):
     return -np.sum(np.square(solutions), axis=1)
 
 
-for _ in range(1000):
+for _ in range(200):
     solutions = optimizer.ask()
     # (10, 8)
     # 10個数分のパラメータ空間の解を持ってくる
     # 各パラメータの長さは8
-    print(solutions.shape)
+    # print(solutions.shape)
 
     # 最大化させる（最小化したいので，マイナスをつけて最大化させている）
     # 複数解を与えて，それらの目的関数値を返す
     objectives = simulate(solutions)
     # (10, )
-    print(objectives.shape)
+    # print(objectives.shape)
 
     # bcs は特徴量
     bcs = solutions[:, :2]
 
     optimizer.tell(objectives, bcs)
 
-grid_archive_heatmap(archive)
-plt.show()
+# grid_archive_heatmap(archive)
+# plt.show()
+
+print(archive.solution_dim)
+print(archive.behavior_dim)
+print(archive.stats)
+
+i = 0
+for elite in archive:
+    print(elite)
+    print(elite.obj)
+    print(elite.idx)
+    print(elite.beh)
+    print(elite.sol)
+    i += 1
+    if i == 5:
+        break
+    # break
+
+# 行動空間の値からエリートを取り出す
+print(archive.elite_with_behavior((0.02, 0.09)))
+
+# 格納されているエリートのインデックスたち
+print(archive._occupied_indices)
+
+# 特徴空間
+bcs = np.array([11, 10])
+# 内部インデックス
+idx = archive.get_index(bcs)
+print(idx)
+print(archive._solutions[idx[0]][idx[1]])
