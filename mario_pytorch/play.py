@@ -23,6 +23,14 @@ from mario_pytorch.util.process_path import (
 EPISODE_LENGTH = 5
 
 
+def change_reward_tmp(reward_config: RewardConfig) -> RewardConfig:
+    reward_config.POSITION = 1
+    reward_config.TIME = -1
+    reward_config.GOAL = 500
+    reward_config.LIFE = 500
+    return reward_config
+
+
 def play(
     env_config_name: str,
     reward_scope_config_name: str,
@@ -41,7 +49,7 @@ def play(
     results_path = get_results_path()
     date_path = get_date_path(results_path, date_str)
     checkpoint_path = get_checkpoint_path(date_path)
-    model_path = get_model_path(checkpoint_path, checkpoint_idx)
+    model_path = get_model_path(checkpoint_path, checkpoint_idx, "episode")
 
     # 環境
     model = torch.load(model_path)["model"]
@@ -62,9 +70,7 @@ def play(
         reward_weights = list(map(float, input(f"Rewards {reward_keys}:").split()))
         reward_config = RewardConfig.init_with_keys(reward_weights, reward_keys)
 
-        # カスタム
-        reward_config.POSITION = 0.001
-        reward_config.TIME = -0.001
+        reward_config = change_reward_tmp(reward_config)
 
         env.change_reward_config(reward_config)
 
@@ -81,7 +87,7 @@ def play(
                 reward_sum += reward
                 state = next_state
 
-                time.sleep(0.001)
+                time.sleep(0.1)
                 # print(info["playlog"])
 
                 if done or info["default"].flag_get:
